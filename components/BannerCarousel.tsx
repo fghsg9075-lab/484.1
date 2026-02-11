@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Slide {
@@ -10,27 +10,31 @@ interface Slide {
 }
 
 interface Props {
-    children?: React.ReactNode[];
+    children?: React.ReactNode;
     slides?: Slide[];
     autoPlay?: boolean;
     interval?: number;
     className?: string;
     showDots?: boolean;
     showArrows?: boolean;
+    onBannerClick?: (link: string) => void;
 }
 
 export const BannerCarousel: React.FC<Props> = ({
     children,
-    slides,
+    slides = [],
     autoPlay = false,
     interval = 5000,
     className,
     showDots = true,
-    showArrows = true
+    showArrows = true,
+    onBannerClick
 }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
 
-    const items = slides && slides.length > 0 ? slides : (children || []);
+    // Convert children to array if it's not already
+    const childArray = React.Children.toArray(children);
+    const items = slides.length > 0 ? slides : childArray;
     const count = items.length;
 
     const nextSlide = () => {
@@ -41,7 +45,7 @@ export const BannerCarousel: React.FC<Props> = ({
         if (count > 0) setCurrentIndex((prev) => (prev - 1 + count) % count);
     };
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (!autoPlay || count <= 1) return;
         const timer = setInterval(nextSlide, interval);
         return () => clearInterval(timer);
@@ -50,28 +54,36 @@ export const BannerCarousel: React.FC<Props> = ({
     if (count === 0) return null;
 
     return (
-        <div className={`relative overflow-hidden rounded-2xl h-full ${className}`}>
+        <div className={`relative overflow-hidden rounded-2xl h-full group ${className}`}>
             <div 
                 className="flex transition-transform duration-500 ease-in-out h-full"
                 style={{ transform: `translateX(-${currentIndex * 100}%)` }}
             >
-                {slides && slides.length > 0 ? (
+                {slides.length > 0 ? (
                     slides.map((slide, index) => (
-                        <div key={slide.id || index} className="w-full flex-shrink-0 relative h-full">
-                            <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
+                        <div
+                            key={slide.id || index}
+                            className="w-full flex-shrink-0 relative h-full cursor-pointer"
+                            onClick={() => {
+                                if (slide.link && onBannerClick) {
+                                    onBannerClick(slide.link);
+                                } else if (slide.link) {
+                                    window.open(slide.link, '_blank');
+                                }
+                            }}
+                        >
+                            <img src={slide.image} alt={slide.title || ''} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                             {(slide.title || slide.subtitle) && (
-                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
-                                    {slide.title && <h3 className="font-bold text-lg">{slide.title}</h3>}
-                                    {slide.subtitle && <p className="text-xs opacity-80">{slide.subtitle}</p>}
+                                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                                    {slide.title && <h3 className="font-bold text-2xl mb-1 drop-shadow-md">{slide.title}</h3>}
+                                    {slide.subtitle && <p className="text-sm font-medium opacity-90 drop-shadow-sm">{slide.subtitle}</p>}
                                 </div>
-                            )}
-                            {slide.link && (
-                                <a href={slide.link} className="absolute inset-0 z-10" />
                             )}
                         </div>
                     ))
                 ) : (
-                    (children as React.ReactNode[]).map((child, index) => (
+                    childArray.map((child, index) => (
                         <div key={index} className="w-full flex-shrink-0 h-full">
                             {child}
                         </div>
@@ -82,22 +94,29 @@ export const BannerCarousel: React.FC<Props> = ({
             {/* Arrows */}
             {showArrows && count > 1 && (
                 <>
-                    <button onClick={prevSlide} className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 text-white p-1 rounded-full hover:bg-black/50 z-20">
-                        <ChevronLeft size={20} />
+                    <button
+                        onClick={(e) => { e.stopPropagation(); prevSlide(); }}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white p-2 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100"
+                    >
+                        <ChevronLeft size={24} />
                     </button>
-                    <button onClick={nextSlide} className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 text-white p-1 rounded-full hover:bg-black/50 z-20">
-                        <ChevronRight size={20} />
+                    <button
+                        onClick={(e) => { e.stopPropagation(); nextSlide(); }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white p-2 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100"
+                    >
+                        <ChevronRight size={24} />
                     </button>
                 </>
             )}
 
             {/* Dots */}
             {showDots && count > 1 && (
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
                     {items.map((_, i) => (
-                        <div 
+                        <button
                             key={i}
-                            className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentIndex ? 'bg-white w-3' : 'bg-white/50'}`}
+                            onClick={(e) => { e.stopPropagation(); setCurrentIndex(i); }}
+                            className={`h-2 rounded-full transition-all duration-300 ${i === currentIndex ? 'bg-white w-6' : 'bg-white/40 w-2 hover:bg-white/60'}`}
                         />
                     ))}
                 </div>

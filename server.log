@@ -107,3 +107,5 @@
  HTTP  2/11/2026 3:20:20 PM ::1 GET /assets/index-BTLhw_Ja.js
  HTTP  2/11/2026 3:20:20 PM ::1 Returned 304 in 1 ms
  HTTP  2/11/2026 3:20:20 PM ::1 Returned 304 in 1 ms
+
+ INFO  Gracefully shutting down. Please wait...

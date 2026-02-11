@@ -11,7 +11,7 @@ import { generateMorningInsight } from '../services/morningInsight';
 import { RedeemSection } from './RedeemSection';
 import { PrizeList } from './PrizeList';
 import { Store } from './Store';
-import { Layout, Gift, Sparkles, Megaphone, Lock, BookOpen, AlertCircle, Edit, Settings, Play, Pause, RotateCcw, MessageCircle, Gamepad2, Timer, CreditCard, Send, CheckCircle, Mail, X, Ban, Smartphone, Trophy, ShoppingBag, ArrowRight, Video, Youtube, Home, User as UserIcon, Book, BookOpenText, List, BarChart3, Award, Bell, Headphones, LifeBuoy, WifiOff, Zap, Star, Crown, History, ListChecks, Rocket, Ticket, TrendingUp, BrainCircuit, FileText, CheckSquare, Menu, LayoutGrid, Compass, User as UserIconOutline, MessageSquare } from 'lucide-react';
+import { Layout, Gift, Sparkles, Megaphone, Lock, BookOpen, AlertCircle, Edit, Settings, Play, Pause, RotateCcw, MessageCircle, Gamepad2, Timer, CreditCard, Send, CheckCircle, Mail, X, Ban, Smartphone, Trophy, ShoppingBag, ArrowRight, Video, Youtube, Home, User as UserIcon, Book, BookOpenText, List, BarChart3, Award, Bell, Headphones, LifeBuoy, WifiOff, Zap, Star, Crown, History, ListChecks, Rocket, Ticket, TrendingUp, BrainCircuit, FileText, CheckSquare, Menu, LayoutGrid, Compass, User as UserIconOutline, MessageSquare, Bot } from 'lucide-react';
 import { SubjectSelection } from './SubjectSelection';
 import { BannerCarousel } from './BannerCarousel';
 import { ChapterSelection } from './ChapterSelection'; // Imported for Video Flow
@@ -64,16 +64,6 @@ interface Props {
   isDarkMode?: boolean;
   onToggleDarkMode?: (v: boolean) => void;
 }
-
-const DEFAULT_PACKAGES: CreditPackage[] = [
-    { id: 'pkg-1', name: 'Starter Pack', price: 100, credits: 150 },
-    { id: 'pkg-2', name: 'Value Pack', price: 200, credits: 350 },
-    { id: 'pkg-3', name: 'Pro Pack', price: 500, credits: 1500 },
-    { id: 'pkg-4', name: 'Ultra Pack', price: 1000, credits: 3000 },
-    { id: 'pkg-5', name: 'Mega Pack', price: 2000, credits: 7000 },
-    { id: 'pkg-6', name: 'Giga Pack', price: 3000, credits: 12000 },
-    { id: 'pkg-7', name: 'Ultimate Pack', price: 5000, credits: 20000 }
-];
 
 export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onSubjectSelect, onRedeemSuccess, settings, onStartWeeklyTest, activeTab, onTabChange, setFullScreen, onNavigate, isImpersonating, onNavigateToChapter, isDarkMode, onToggleDarkMode }) => {
   
@@ -182,7 +172,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
   // --- HEADER CONTROL ---
   useEffect(() => {
     // Force Full Screen for Home/Explore/Profile to use Custom Header
-    if (activeTab === 'HOME' || activeTab === 'EXPLORE' || activeTab === 'PROFILE') {
+    if (activeTab === 'HOME' || activeTab === 'EXPLORE' || activeTab === 'PROFILE' || activeTab === 'AI_STUDIO') {
         setFullScreen(true);
     } else {
         // For other tabs (content), let the content decide or default to normal
@@ -212,8 +202,6 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestData, setRequestData] = useState({ subject: '', topic: '', type: 'PDF' });
 
-  const [showAllTopics, setShowAllTopics] = useState(false);
-
   // AI Modal State
   const [showAiModal, setShowAiModal] = useState(false);
   const [aiTopic, setAiTopic] = useState('');
@@ -231,42 +219,6 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
   if (!selectedPhoneId && adminPhones.length > 0) {
     setSelectedPhoneId(defaultPhoneId);
   }
-
-  // --- CHALLENGE 2.0 LOGIC ---
-  const [challenges20, setChallenges20] = useState<Challenge20[]>([]);
-  useEffect(() => {
-      const loadChallenges = async () => {
-          if (user.classLevel) {
-              const active = await getActiveChallenges(user.classLevel);
-              setChallenges20(active);
-          }
-      };
-      loadChallenges();
-      // Poll every minute
-      const interval = setInterval(loadChallenges, 60000);
-      return () => clearInterval(interval);
-  }, [user.classLevel]);
-
-  const startChallenge20 = (challenge: Challenge20) => {
-      // Map Challenge20 to WeeklyTest structure
-      const safeQuestions = Array.isArray(challenge.questions) ? challenge.questions : [];
-      
-      const mappedTest: WeeklyTest = {
-          id: challenge.id,
-          name: challenge.title,
-          description: challenge.description || '2.0 Challenge',
-          isActive: true,
-          classLevel: challenge.classLevel,
-          questions: safeQuestions,
-          totalQuestions: safeQuestions.length,
-          passingScore: Math.ceil(safeQuestions.length * 0.5), // 50% Passing Default
-          createdAt: challenge.createdAt,
-          durationMinutes: challenge.durationMinutes || (challenge.type === 'DAILY_CHALLENGE' ? 15 : 60),
-          autoSubmitEnabled: true
-      };
-      
-      if (onStartWeeklyTest) onStartWeeklyTest(mappedTest);
-  };
 
   // --- SELF-REPAIR SYNC (Fix for "New User Not Showing") ---
   useEffect(() => {
@@ -338,83 +290,6 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
       loadMorningInsight();
   }, [user.role, settings]);
 
-  // --- DAILY/WEEKLY CHALLENGE AUTO-GENERATOR ---
-  useEffect(() => {
-      const checkAndGenerateChallenges = async () => {
-          const today = new Date();
-          const dateStr = today.toDateString();
-          
-          // 1. DAILY CHALLENGE (Reset every day)
-          const lastDaily = localStorage.getItem(`daily_challenge_gen_${dateStr}`);
-          if (!lastDaily) {
-              // Generate Logic
-              if (user && user.classLevel && settings) {
-                  try {
-                      const challenge = await generateDailyChallengeQuestions(
-                          user.classLevel, 
-                          user.board || 'CBSE', 
-                          user.stream || null, 
-                          settings, 
-                          user.id, 
-                          'DAILY'
-                      );
-                      // Save to LocalStorage to prevent re-gen today
-                      localStorage.setItem(`daily_challenge_data`, JSON.stringify(challenge));
-                      localStorage.setItem(`daily_challenge_gen_${dateStr}`, 'true');
-                  } catch (e) { console.error("Daily Challenge Gen Error", e); }
-              }
-          }
-
-          // 2. WEEKLY CHALLENGE (Reset every Sunday)
-          // Check if today is Sunday (0) and not generated
-          if (today.getDay() === 0) {
-              const lastWeekly = localStorage.getItem(`weekly_challenge_gen_${dateStr}`);
-              if (!lastWeekly) {
-                  if (user && user.classLevel && settings) {
-                      try {
-                          const challenge = await generateDailyChallengeQuestions(
-                              user.classLevel, 
-                              user.board || 'CBSE', 
-                              user.stream || null, 
-                              settings, 
-                              user.id, 
-                              'WEEKLY'
-                          );
-                          localStorage.setItem(`weekly_challenge_data`, JSON.stringify(challenge));
-                          localStorage.setItem(`weekly_challenge_gen_${dateStr}`, 'true');
-                      } catch (e) { console.error("Weekly Challenge Gen Error", e); }
-                  }
-              }
-          }
-      };
-      
-      checkAndGenerateChallenges();
-  }, [user.classLevel, user.board, settings]); // Re-run if user profile changes
-
-  const startAutoChallenge = (type: 'DAILY' | 'WEEKLY') => {
-      const key = type === 'DAILY' ? 'daily_challenge_data' : 'weekly_challenge_data';
-      const stored = localStorage.getItem(key);
-      if (stored) {
-          const challenge = JSON.parse(stored);
-          const mappedTest: WeeklyTest = {
-              id: challenge.id,
-              name: challenge.name,
-              description: type === 'DAILY' ? 'Daily Mixed Practice' : 'Weekly Mega Test',
-              isActive: true,
-              classLevel: user.classLevel || '10',
-              questions: challenge.questions,
-              totalQuestions: challenge.questions.length,
-              passingScore: Math.ceil(challenge.questions.length * 0.5),
-              createdAt: new Date().toISOString(),
-              durationMinutes: challenge.durationMinutes,
-              autoSubmitEnabled: true
-          };
-          if (onStartWeeklyTest) onStartWeeklyTest(mappedTest);
-      } else {
-          showAlert("Challenge not ready yet. Please try again later.", "INFO");
-      }
-  };
-  
   useEffect(() => {
      const evt = settings?.specialDiscountEvent;
      
@@ -1010,30 +885,6 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
       );
   };
 
-  const DashboardTileWrapper = ({ id, children, label }: { id: string, children: React.ReactNode, label: string }) => {
-      const isVisible = settings?.dashboardLayout?.[id]?.visible !== false;
-      
-      if (!isVisible && !isLayoutEditing) return null;
-
-      return (
-          <div className={`relative h-full ${isLayoutEditing ? 'border-2 border-dashed border-yellow-400 rounded-xl bg-yellow-50/10' : ''}`}>
-              {isLayoutEditing && (
-                  <div className="absolute -top-2 -right-2 z-50">
-                      <button 
-                          onClick={(e) => { e.stopPropagation(); toggleLayoutVisibility(id); }}
-                          className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm ${isVisible ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}
-                      >
-                          {isVisible ? '✓' : '✕'}
-                      </button>
-                  </div>
-              )}
-              <div className={`${!isVisible ? 'opacity-50 grayscale pointer-events-none' : ''} h-full`}>
-                  {children}
-              </div>
-          </div>
-      );
-  };
-
   // --- RENDER BASED ON ACTIVE TAB ---
   const renderMainContent = () => {
       // 1. HOME TAB
@@ -1050,9 +901,20 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                             <List size={24} className="text-slate-600" />
                         </button>
                         <div>
-                            <h2 className="text-lg font-black text-slate-800 leading-none">
-                                {settings?.appName || 'Student App'}
-                            </h2>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-lg font-black text-slate-800 leading-none">
+                                    {settings?.appName || 'Student App'}
+                                </h2>
+                                {/* DISCOUNT BADGE */}
+                                {discountStatus === 'ACTIVE' && (
+                                    <button
+                                        onClick={() => onTabChange('STORE')}
+                                        className="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse shadow-sm"
+                                    >
+                                        {settings?.specialDiscountEvent?.discountPercent || 50}% OFF
+                                    </button>
+                                )}
+                            </div>
                             <div className="flex items-center gap-2 mt-1">
                                 <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{user.displayId || user.id.slice(0,6)}</span>
                                 {user.role === 'ADMIN' && <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-[9px] font-bold">ADMIN</span>}
@@ -1072,12 +934,15 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                                 <Zap size={14} className="fill-orange-500"/> {user.streak}
                             </span>
                         </div>
-                        <button
-                            onClick={() => setEditMode(true)}
-                            className="bg-slate-50 p-2 rounded-full hover:bg-slate-100"
-                        >
-                            <Settings size={20} className="text-slate-400"/>
-                        </button>
+                        {user.isPremium && user.subscriptionEndDate && (
+                            <div className="flex flex-col items-end border-l pl-3 border-slate-100">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase">Plan</span>
+                                <span className="font-black text-purple-600 text-[10px]">
+                                    {user.subscriptionTier === 'LIFETIME' ? '∞' :
+                                     `${Math.max(0, Math.ceil((new Date(user.subscriptionEndDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))} Days`}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -1087,233 +952,116 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                         history={user.mcqHistory || []}
                         user={user}
                         onViewNotes={(topic) => {
-                            // Find note by topic logic or open PDF tab
-                            // For simplicity, switch to PDF tab and trigger search if possible
                             onTabChange('PDF');
-                            // We can't auto-search yet without a search context in PDF view, but this navigates user.
                         }}
                     />
                 </DashboardSectionWrapper>
 
-                {/* STUDY GOAL TIMER */}
+                {/* STUDY TIMER */}
                 <DashboardSectionWrapper id="section_timer" label="Study Goal">
-                    <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
-                        <div className="flex justify-between items-center mb-4">
-                            <div>
-                                <h3 className="font-black text-slate-800 text-lg flex items-center gap-2">
-                                    <Timer size={20} className="text-orange-500" /> Daily Goal
-                                </h3>
-                                <p className="text-xs text-slate-500">Set your study target</p>
-                            </div>
-                            <div className="text-right">
-                                <span className="text-2xl font-black text-slate-800">
-                                    {Math.floor(dailyTargetSeconds / 3600)}h {Math.floor((dailyTargetSeconds % 3600) / 60)}m
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                            {[0.5, 1, 2].map(h => (
-                                <button
-                                    key={h}
-                                    onClick={() => {
-                                        setDailyTargetSeconds(h * 3600);
-                                        localStorage.setItem(`nst_goal_${user.id}`, h.toString());
-                                    }}
-                                    className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold border transition-all ${dailyTargetSeconds === h * 3600 ? 'bg-orange-500 text-white border-orange-600' : 'bg-slate-50 text-slate-600 border-slate-200'}`}
-                                >
-                                    {h} Hour{h > 1 ? 's' : ''}
-                                </button>
-                            ))}
-                            <button 
-                                onClick={() => {
-                                    setDailyTargetSeconds(3 * 3600);
-                                    localStorage.setItem(`nst_goal_${user.id}`, '3');
-                                }}
-                                className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold border transition-all ${dailyTargetSeconds === 3 * 3600 ? 'bg-orange-500 text-white border-orange-600' : 'bg-slate-50 text-slate-600 border-slate-200'}`}
-                            >
-                                Default (3h)
-                            </button>
-                            <button
-                                onClick={() => {
-                                    const custom = prompt("Enter hours (1-12):");
-                                    if (custom) {
-                                        const h = parseFloat(custom);
-                                        if (h > 0 && h <= 12) {
-                                            setDailyTargetSeconds(h * 3600);
-                                            localStorage.setItem(`nst_goal_${user.id}`, h.toString());
-                                        }
-                                    }
-                                }}
-                                className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold bg-slate-50 text-slate-600 border border-slate-200"
-                            >
-                                Custom
-                            </button>
-                        </div>
-                    </div>
+                    <StudyGoalTimer
+                        dailyStudySeconds={dailyStudySeconds}
+                        targetSeconds={dailyTargetSeconds}
+                        onSetTarget={(s) => {
+                            setDailyTargetSeconds(s);
+                            localStorage.setItem(`nst_goal_${user.id}`, (s / 3600).toString());
+                        }}
+                    />
                 </DashboardSectionWrapper>
 
-                {/* STUDY HUB LINKS (MOVED FROM BOTTOM) */}
-                <DashboardSectionWrapper id="section_hub_links" label="Study Hub">
+                {/* MAIN ACTION BUTTONS */}
+                <DashboardSectionWrapper id="section_main_actions" label="Main Actions">
                     <div className="grid grid-cols-2 gap-4">
-                        {/* Videos Button */}
-                        {hasPermission('f1') && (
-                            <button
-                                onClick={() => {
-                                    setSelectedSubject({ id: 'universal', name: 'Special' } as any);
-                                    setSelectedChapter({ id: 'UNIVERSAL', title: 'Featured Lectures' } as any);
-                                    setContentViewStep('PLAYER');
-                                    setFullScreen(true);
-                                    onTabChange('VIDEO');
-                                    localStorage.setItem('nst_last_read_update', Date.now().toString());
-                                    setHasNewUpdate(false);
-                                }}
-                                className="bg-gradient-to-br from-red-500 to-rose-600 p-6 rounded-3xl shadow-lg shadow-red-200 flex flex-col items-center justify-center gap-3 group active:scale-95 transition-all relative overflow-hidden"
-                            >
-                                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <div className="bg-white/20 p-4 rounded-full text-white backdrop-blur-sm">
-                                    <Play size={32} fill="currentColor" />
-                                </div>
-                                <span className="font-black text-white text-lg tracking-wide uppercase">Videos</span>
-                                {hasNewUpdate && <span className="absolute top-4 right-4 w-3 h-3 bg-white rounded-full animate-pulse"></span>}
-                            </button>
-                        )}
-
-                        {/* Courses Button */}
                         <button
                             onClick={() => { onTabChange('COURSES'); setContentViewStep('SUBJECTS'); }}
-                            className="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-3xl shadow-lg shadow-blue-200 flex flex-col items-center justify-center gap-3 group active:scale-95 transition-all relative overflow-hidden"
+                            className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-3xl shadow-lg shadow-blue-200 flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all relative overflow-hidden h-32"
                         >
                             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <div className="bg-white/20 p-4 rounded-full text-white backdrop-blur-sm">
-                                <Book size={32} />
-                            </div>
-                            <span className="font-black text-white text-lg tracking-wide uppercase">Courses</span>
+                            <Book size={32} className="text-white mb-1" />
+                            <span className="font-black text-white text-lg tracking-wide uppercase">My Courses</span>
+                        </button>
+
+                        <button
+                            onClick={() => setShowMonthlyReport(true)}
+                            className="bg-white border-2 border-slate-100 p-6 rounded-3xl shadow-sm flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all hover:border-blue-200 h-32"
+                        >
+                            <BarChart3 size={32} className="text-blue-600 mb-1" />
+                            <span className="font-black text-slate-700 text-lg tracking-wide uppercase">My Analysis</span>
                         </button>
                     </div>
                 </DashboardSectionWrapper>
-
-                {/* HERO SECTION */}
-                  <div className="space-y-4 mb-6">
-                      
-                      {/* SPECIAL DISCOUNT BANNER (Kept separate as requested) */}
-                      {showDiscountBanner && discountTimer && (
-                          <div 
-                              onClick={() => onTabChange('STORE')}
-                              className="mx-1 mb-4 relative p-[2px] rounded-2xl overflow-hidden cursor-pointer group"
-                          >
-                              {/* Rotating Border Animation */}
-                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent animate-spin-slow opacity-0 group-hover:opacity-100 transition-opacity" style={{ animationDuration: '3s' }}></div>
-                              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-600 animate-border-rotate"></div>
-                              
-                              <div className="relative bg-gradient-to-r from-blue-900 to-slate-900 p-4 rounded-2xl shadow-xl overflow-hidden">
-                                  {/* Glossy Overlay */}
-                                  <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none"></div>
-                                  
-                                  <div className="flex justify-between items-center relative z-10 text-white">
-                                      <div>
-                                          <h3 className="text-lg font-black italic flex items-center gap-2">
-                                              <Sparkles size={18} className="text-yellow-400 animate-pulse" />
-                                              {discountStatus === 'WAITING' ? '⚡ SALE STARTING SOON' : `🔥 ${settings?.specialDiscountEvent?.eventName || 'LIMITED TIME OFFER'} IS LIVE!`}
-                                          </h3>
-                                          <p className="text-xs font-bold text-blue-200">
-                                              {discountStatus === 'WAITING' ? 'Get ready for massive discounts!' : `Get ${settings?.specialDiscountEvent?.discountPercent || 50}% OFF on all premium plans!`}
-                                          </p>
-                                      </div>
-                                      <div className="text-right">
-                                          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-300">{discountStatus === 'WAITING' ? 'STARTS IN' : 'ENDS IN'}</p>
-                                          <p className="text-2xl font-black font-mono leading-none text-white drop-shadow-md">{discountTimer}</p>
-                                      </div>
-                                  </div>
-                                  
-                                  {/* Moving Shine Effect */}
-                                  <div className="absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine"></div>
-                              </div>
-                          </div>
-                      )}
-
-                      {/* NEW: STACKED ACTION GRID */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 mx-1">
-                          {/* 1. Subscription Buttons */}
-                          <div className="grid grid-cols-2 gap-3">
-                              {hasPermission('f11') && <button onClick={() => onTabChange('STORE')} className="relative h-24 bg-gradient-to-br from-purple-800 to-indigo-900 rounded-2xl overflow-hidden shadow-lg flex flex-col items-center justify-center border border-purple-500/30 p-2 group">
-                                  <div className="absolute right-0 top-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity"><Crown size={48} className="text-white"/></div>
-                                  <Crown size={24} className="text-yellow-400 mb-1"/>
-                                  <span className="text-sm font-black text-white italic">ULTRA SUB</span>
-                                  <span className="text-[8px] text-purple-200">Unlock Everything</span>
-                              </button>}
-
-                              {hasPermission('f11') && <button onClick={() => onTabChange('STORE')} className="relative h-24 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl overflow-hidden shadow-lg flex flex-col items-center justify-center border border-blue-400/30 p-2 group">
-                                  <div className="absolute right-0 top-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity"><Star size={48} className="text-white"/></div>
-                                  <Star size={24} className="text-white mb-1"/>
-                                  <span className="text-sm font-black text-white italic">BASIC SUB</span>
-                                  <span className="text-[8px] text-blue-100">Starter Pack</span>
-                              </button>}
-                          </div>
-
-                          {/* 2. Auto-Sliding Ultra Media Banner (Non-Clickable) */}
-                          <div className="h-32 rounded-2xl overflow-hidden shadow-lg relative border-2 border-slate-900">
-                              {/* Overlay controls disabled */}
-                              <div className="absolute inset-0 z-20 bg-transparent"></div>
-
-                              <BannerCarousel
-                                  slides={[
-                                      { id: '1', image: 'https://img.freepik.com/free-vector/gradient-education-poster-template_23-2150338779.jpg', title: 'ULTRA VIDEO', subtitle: 'HD Lectures', link: '' },
-                                      { id: '2', image: 'https://img.freepik.com/free-vector/gradient-education-flyer-template_23-2150338784.jpg', title: 'ULTRA PDF', subtitle: 'Premium Notes', link: '' },
-                                      { id: '3', image: 'https://img.freepik.com/free-vector/online-tutorials-concept_52683-37480.jpg', title: 'ULTRA MCQ', subtitle: 'Test Series', link: '' },
-                                      { id: '4', image: 'https://img.freepik.com/free-vector/audiobook-concept-illustration_114360-6070.jpg', title: 'ULTRA AUDIO', subtitle: 'Listen & Learn', link: '' }
-                                  ]}
-                                  interval={2000} // Fast Auto Skip
-                                  autoPlay={true}
-                                  showDots={false}
-                                  showArrows={false}
-                              />
-                              <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-2 flex justify-between items-center z-10 backdrop-blur-sm">
-                                  <span className="text-xs font-black text-white flex items-center gap-1"><Crown size={12} className="text-yellow-400"/> PREMIUM CONTENT</span>
-                                  <span className="text-[9px] text-slate-300 uppercase tracking-widest">Auto-Preview</span>
-                              </div>
-                          </div>
-
-                          {/* 3. AI & Custom Buttons */}
-                          <div className="grid grid-cols-3 gap-3 md:col-span-2">
-                              {hasPermission('f101') && <button onClick={() => onTabChange('AI_CHAT')} className="h-24 bg-indigo-600 rounded-2xl shadow-lg flex flex-col items-center justify-center text-white relative overflow-hidden group">
-                                  <div className="absolute inset-0 bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                  <MessageSquare size={28} className="mb-1 relative z-10"/>
-                                  <span className="text-xs font-black relative z-10">AI CHAT</span>
-                                  <span className="text-[8px] opacity-70 relative z-10">Ask Anything</span>
-                              </button>}
-
-                              {hasPermission('f36') && <button onClick={() => setShowAiModal(true)} className="h-24 bg-sky-500 rounded-2xl shadow-lg flex flex-col items-center justify-center text-white relative overflow-hidden group">
-                                  <div className="absolute inset-0 bg-sky-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                  <BrainCircuit size={28} className="mb-1 relative z-10"/>
-                                  <span className="text-xs font-black relative z-10">AI NOTES</span>
-                                  <span className="text-[8px] opacity-70 relative z-10">Generate</span>
-                              </button>}
-
-                              {hasPermission('f32') && <button onClick={() => onTabChange('CUSTOM_PAGE')} className="h-24 bg-slate-800 rounded-2xl shadow-lg flex flex-col items-center justify-center text-white relative overflow-hidden group">
-                                  <div className="absolute inset-0 bg-slate-700 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                  <Layout size={28} className="mb-1 relative z-10"/>
-                                  <span className="text-xs font-black relative z-10">CUSTOM</span>
-                                  <span className="text-[8px] opacity-70 relative z-10">Explore Page</span>
-                              </button>}
-                          </div>
-                      </div>
-                  </div>
               </div>
           );
       }
 
-      // 2. EXPLORE TAB
-      if (activeTab === 'EXPLORE') {
+      // 2. AI STUDIO TAB
+      if (activeTab === 'AI_STUDIO') {
           return (
-              <ExplorePage
-                  user={user}
-                  settings={settings}
-                  onTabChange={onTabChange}
-                  onStartWeeklyTest={onStartWeeklyTest}
-                  onOpenAiChat={() => onTabChange('AI_CHAT')}
-                  onOpenAiNotes={() => setShowAiModal(true)}
-              />
+              <div className="space-y-6 pb-24 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-2xl font-black text-slate-800">AI Studio</h2>
+                      <div className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold">
+                          Beta
+                      </div>
+                  </div>
+
+                  {/* BANNERS */}
+                  <div className="h-48 rounded-2xl overflow-hidden shadow-lg relative border-2 border-slate-900 mb-6">
+                        <BannerCarousel
+                            slides={[
+                                ...(settings?.exploreBanners?.filter(b => b.isActive).map(b => ({
+                                    id: b.id, image: b.imageUrl, link: b.actionUrl
+                                })) || []),
+                                ...(showDiscountBanner ? [{
+                                    id: 'discount',
+                                    image: 'https://img.freepik.com/free-vector/gradient-sale-background_23-2148934477.jpg',
+                                    title: 'Special Offer',
+                                    subtitle: `${settings?.specialDiscountEvent?.discountPercent || 50}% OFF Ends Soon!`,
+                                    link: ''
+                                }] : [])
+                            ]}
+                            interval={3000}
+                            autoPlay={true}
+                            showDots={true}
+                            showArrows={false}
+                        />
+                  </div>
+
+                  {/* AI TOOLS */}
+                  <div className="grid gap-4">
+                      <button
+                          onClick={() => onTabChange('AI_CHAT')}
+                          className="bg-white p-6 rounded-3xl shadow-sm border border-indigo-100 flex items-center gap-4 hover:shadow-md transition-all group"
+                      >
+                          <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
+                              <Bot size={32} />
+                          </div>
+                          <div className="text-left">
+                              <h3 className="text-lg font-black text-slate-800">AI Tutor</h3>
+                              <p className="text-xs text-slate-500">Voice & Chat Interactive Learning</p>
+                          </div>
+                          <div className="ml-auto bg-indigo-50 p-2 rounded-full text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                              <ArrowRight size={20} />
+                          </div>
+                      </button>
+
+                      <button
+                          onClick={() => setShowAiModal(true)}
+                          className="bg-white p-6 rounded-3xl shadow-sm border border-purple-100 flex items-center gap-4 hover:shadow-md transition-all group"
+                      >
+                          <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
+                              <BrainCircuit size={32} />
+                          </div>
+                          <div className="text-left">
+                              <h3 className="text-lg font-black text-slate-800">AI Agent</h3>
+                              <p className="text-xs text-slate-500">Instant Notes & Doubt Solver</p>
+                          </div>
+                          <div className="ml-auto bg-purple-50 p-2 rounded-full text-purple-400 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                              <ArrowRight size={20} />
+                          </div>
+                      </button>
+                  </div>
+              </div>
           );
       }
 
@@ -1327,88 +1075,9 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
           return (
               <div className="space-y-6 pb-24">
                       <div className="flex items-center justify-between">
-                          <h2 className="text-2xl font-black text-slate-800">Explore</h2>
-                          <button onClick={() => onTabChange('LEADERBOARD')} className="bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 hover:bg-yellow-200 transition">
-                              <Trophy size={14} /> Rank List
-                          </button>
+                          <h2 className="text-2xl font-black text-slate-800">My Courses</h2>
                       </div>
 
-                      {/* ADMIN BANNERS */}
-                      {settings?.exploreBanners && settings.exploreBanners.filter(b => b.isActive).length > 0 && (
-                          <div className="mb-6">
-                              <BannerCarousel
-                                  slides={settings.exploreBanners.filter(b => b.isActive).map(b => ({
-                                      id: b.id,
-                                      image: b.imageUrl,
-                                      title: '',
-                                      subtitle: '',
-                                      link: b.actionUrl || ''
-                                  }))}
-                                  interval={3000}
-                                  autoPlay={true}
-                                  showDots={true}
-                                  showArrows={false}
-                              />
-                          </div>
-                      )}
-
-                      {/* ASK DOUBTS (AI CHAT) */}
-                      <div className="bg-indigo-600 rounded-2xl p-6 shadow-lg shadow-indigo-200 relative overflow-hidden mb-6">
-                          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
-                          <div className="relative z-10">
-                              <h3 className="text-xl font-black text-white mb-1 flex items-center gap-2"><MessageCircle size={24}/> Ask Your Doubts</h3>
-                              <p className="text-indigo-100 text-xs mb-4">Stuck on a question? Ask our AI Tutor for instant help!</p>
-                              <button
-                                  onClick={() => onTabChange('AI_CHAT')}
-                                  className="bg-white text-indigo-600 font-bold px-4 py-2 rounded-xl text-sm shadow hover:bg-indigo-50 transition-colors"
-                              >
-                                  Chat Now &rarr;
-                              </button>
-                          </div>
-                      </div>
-
-                      {/* RECOMMENDED NOTES (Universal) */}
-                      {universalNotes.length > 0 && !(settings?.hiddenFeatures?.includes('f56')) && (
-                          <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 animate-in slide-in-from-top-4">
-                              <h3 className="font-bold text-blue-800 flex items-center gap-2 mb-3">
-                                  <FileText size={18} className="text-blue-600" /> Recommended Notes
-                              </h3>
-                              <div className="space-y-2">
-                                  {universalNotes.map((note, i) => (
-                                      <button
-                                          key={i}
-                                          onClick={() => {
-                                              // Open PDF View
-                                              setSelectedSubject({ id: 'universal_notes', name: 'Recommended' } as any);
-                                              setSelectedChapter({
-                                                  id: `NOTE_${i}`,
-                                                  title: note.title,
-                                                  directResource: { url: note.url, access: note.access }
-                                              } as any);
-                                              setContentViewStep('PLAYER');
-                                              setFullScreen(true);
-                                              onTabChange('PDF');
-                                          }}
-                                          className="w-full bg-white p-3 rounded-xl border border-blue-100 shadow-sm flex items-center justify-between group hover:border-blue-300 transition-all"
-                                      >
-                                          <div className="flex items-center gap-3 overflow-hidden">
-                                              <div className="bg-blue-100 text-blue-600 p-2 rounded-lg font-bold text-xs group-hover:bg-blue-600 group-hover:text-white transition-colors">PDF</div>
-                                              <div className="text-left">
-                                                  <p className="font-bold text-slate-800 text-xs truncate group-hover:text-blue-700">{note.title}</p>
-                                                  <p className="text-[10px] text-slate-400">{note.access === 'FREE' ? 'Free Access' : 'Premium'}</p>
-                                              </div>
-                                          </div>
-                                          <div className="bg-slate-50 p-1.5 rounded-full text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                                              <ArrowRight size={14} />
-                                          </div>
-                                      </button>
-                                  ))}
-                              </div>
-                          </div>
-                      )}
-
-                      {/* SYLLABUS SELECTOR REMOVED FROM COURSES */}
-                      
                       {/* Video Section */}
                       {settings?.contentVisibility?.VIDEO !== false && (
                           <div className="bg-gradient-to-br from-red-50 to-rose-100 p-6 rounded-3xl border border-red-200 shadow-sm">
@@ -1893,9 +1562,9 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                     <span className="text-[10px] font-bold mt-1">Home</span>
                 </button>
                 
-                <button onClick={() => onTabChange('EXPLORE')} className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'EXPLORE' ? 'text-blue-600' : 'text-slate-400'}`}>
-                    <Compass size={24} fill={activeTab === 'EXPLORE' ? "currentColor" : "none"} />
-                    <span className="text-[10px] font-bold mt-1">Explore</span>
+                <button onClick={() => onTabChange('AI_STUDIO')} className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'AI_STUDIO' ? 'text-blue-600' : 'text-slate-400'}`}>
+                    <Sparkles size={24} fill={activeTab === 'AI_STUDIO' ? "currentColor" : "none"} />
+                    <span className="text-[10px] font-bold mt-1">AI Studio</span>
                 </button>
 
                 <button onClick={() => onTabChange('HISTORY')} className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'HISTORY' ? 'text-blue-600' : 'text-slate-400'}`}>
@@ -2125,36 +1794,41 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                        {hasPermission('f6') && (
-                            <button onClick={() => { onTabChange('REDEEM'); setShowSidebar(false); }} className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700">
-                                <div className="bg-indigo-100 text-indigo-600 p-2 rounded-lg"><Gift size={20} /></div>
-                                Redeem
-                            </button>
-                        )}
-                        {hasPermission('f9') && isGameEnabled && (
+                        {/* REORDERED MENU as per request */}
+                        <button onClick={() => { setShowInbox(true); setShowSidebar(false); }} className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700">
+                            <div className="bg-indigo-100 text-indigo-600 p-2 rounded-lg"><Mail size={20} /></div>
+                            Inbox
+                        </button>
+                        <button onClick={() => { onTabChange('ANALYTICS'); setShowSidebar(false); }} className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700">
+                            <div className="bg-blue-100 text-blue-600 p-2 rounded-lg"><BarChart3 size={20} /></div>
+                            Analytics
+                        </button>
+                        <button onClick={() => { setShowMonthlyReport(true); setShowSidebar(false); }} className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700">
+                            <div className="bg-green-100 text-green-600 p-2 rounded-lg"><FileText size={20} /></div>
+                            Marksheet
+                        </button>
+                        <button onClick={() => { onTabChange('HISTORY'); setShowSidebar(false); }} className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700">
+                            <div className="bg-slate-100 text-slate-600 p-2 rounded-lg"><History size={20} /></div>
+                            History
+                        </button>
+                        <button onClick={() => { onTabChange('SUB_HISTORY'); setShowSidebar(false); }} className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700">
+                            <div className="bg-purple-100 text-purple-600 p-2 rounded-lg"><CreditCard size={20} /></div>
+                            My Plan
+                        </button>
+                        {isGameEnabled && (
                             <button onClick={() => { onTabChange('GAME'); setShowSidebar(false); }} className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700">
-                                <div className="bg-purple-100 text-purple-600 p-2 rounded-lg"><Gamepad2 size={20} /></div>
+                                <div className="bg-orange-100 text-orange-600 p-2 rounded-lg"><Gamepad2 size={20} /></div>
                                 Play Game
                             </button>
                         )}
-                        {hasPermission('f11') && (
-                            <button onClick={() => { onTabChange('SUB_HISTORY'); setShowSidebar(false); }} className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700">
-                                <div className="bg-blue-100 text-blue-600 p-2 rounded-lg"><CreditCard size={20} /></div>
-                                My Plan
-                            </button>
-                        )}
-                        {hasPermission('f12') && (
-                            <button onClick={() => { onTabChange('STORE'); setShowSidebar(false); }} className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700">
-                                <div className="bg-yellow-100 text-yellow-600 p-2 rounded-lg"><Crown size={20} /></div>
-                                Premium Store
-                            </button>
-                        )}
-                        {hasPermission('f35') && (
-                            <button onClick={() => { onTabChange('HISTORY'); setShowSidebar(false); }} className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700">
-                                <div className="bg-slate-100 text-slate-600 p-2 rounded-lg"><History size={20} /></div>
-                                History
-                            </button>
-                        )}
+                        <button onClick={() => { onTabChange('REDEEM'); setShowSidebar(false); }} className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700">
+                            <div className="bg-pink-100 text-pink-600 p-2 rounded-lg"><Gift size={20} /></div>
+                            Redeem
+                        </button>
+                        <button onClick={() => { onTabChange('PRIZES'); setShowSidebar(false); }} className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700">
+                            <div className="bg-yellow-100 text-yellow-600 p-2 rounded-lg"><Trophy size={20} /></div>
+                            Prizes
+                        </button>
                     </div>
 
                     <div className="p-4 border-t border-slate-100">

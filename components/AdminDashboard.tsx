@@ -42,13 +42,13 @@ type AdminTab =
   | 'SUBSCRIPTION_MANAGER'
   | 'CODES'
   | 'SUBJECTS_MGR'
-  | 'LEADERBOARD' 
+  /* | 'LEADERBOARD' - REMOVED */
   | 'NOTICES' 
   | 'DATABASE'
   | 'DEPLOY'         
   | 'ACCESS' 
   | 'SUB_ADMINS'
-  | 'LOGS' 
+  /* | 'LOGS' - REMOVED */
   | 'DEMAND' 
   | 'RECYCLE' 
   | 'SYLLABUS_MANAGER' 
@@ -63,7 +63,6 @@ type AdminTab =
   | 'CONFIG_SECURITY' 
   | 'CONFIG_VISIBILITY' 
   | 'CONFIG_AI' 
-  | 'CONFIG_ADS' 
   | 'CONFIG_GAME'
   | 'CONFIG_PAYMENT'
   | 'CONFIG_EXTERNAL_APPS'
@@ -75,15 +74,11 @@ type AdminTab =
   | 'CONFIG_CHAT'
   | 'CONFIG_WATERMARK'
   | 'UNIVERSAL_PLAYLIST'
-  | 'UNIVERSAL_NOTES'
   | 'CONFIG_CHALLENGE'
   | 'CHALLENGE_CREATOR_20'
-  | 'APP_MODES'
-  | 'EXPLORE_BANNERS'
   | 'BLOGGER_HUB'
   | 'CONFIG_GATING'
   | 'WHATSAPP_CONNECT'
-  | 'EXPLORE_BANNERS'
   | 'FEATURE_CONTROL';
 
 interface ContentConfig {
@@ -2624,8 +2619,7 @@ const AdminDashboardInner: React.FC<Props> = ({ onNavigate, settings, onUpdateSe
                   {(hasPermission('MANAGE_PLANS') || currentUser?.role === 'ADMIN') && <DashboardCard icon={Crown} label="Plans Manager" onClick={() => setActiveTab('SUBSCRIPTION_PLANS_EDITOR')} color="blue" />}
                   {(hasPermission('MANAGE_GIFT_CODES') || currentUser?.role === 'ADMIN') && <DashboardCard icon={Gift} label="Gift Codes" onClick={() => setActiveTab('CODES')} color="pink" />}
                   {(hasPermission('MANAGE_SYLLABUS') || currentUser?.role === 'ADMIN') && <DashboardCard icon={Book} label="Subjects" onClick={() => setActiveTab('SUBJECTS_MGR')} color="emerald" />}
-                  <DashboardCard icon={FileText} label="Bulk / Rec. Notes" onClick={() => setActiveTab('UNIVERSAL_NOTES')} color="blue" />
-                  {(hasPermission('VIEW_DEMANDS') || currentUser?.role === 'ADMIN') && <DashboardCard icon={Megaphone} label="Demands" onClick={() => setActiveTab('DEMAND')} color="orange" count={demands.length} />}
+                  {/* {(hasPermission('VIEW_DEMANDS') || currentUser?.role === 'ADMIN') && <DashboardCard icon={Megaphone} label="Demands" onClick={() => setActiveTab('DEMAND')} color="orange" count={demands.length} />} */}
                   {(hasPermission('APPROVE_LOGIN_REQS') || currentUser?.role === 'ADMIN') && <DashboardCard icon={Key} label="Login Reqs" onClick={() => setActiveTab('ACCESS')} color="purple" count={recoveryRequests.filter(r => r.status === 'PENDING').length} />}
                   
                   <div className="col-span-2 sm:col-span-3 md:col-span-4 lg:col-span-6 h-px bg-slate-100 my-2"></div>
@@ -2671,11 +2665,11 @@ const AdminDashboardInner: React.FC<Props> = ({ onNavigate, settings, onUpdateSe
                           <DashboardCard icon={Monitor} label="General" onClick={() => setActiveTab('CONFIG_GENERAL')} color="blue" />
                           <DashboardCard icon={ShieldCheck} label="Security" onClick={() => setActiveTab('CONFIG_SECURITY')} color="red" />
                           <DashboardCard icon={Eye} label="Visibility" onClick={() => setActiveTab('CONFIG_VISIBILITY')} color="cyan" />
-                          <DashboardCard icon={Settings} label="App Modes" onClick={() => setActiveTab('APP_MODES')} color="green" />
-                          {(hasPermission('MANAGE_SETTINGS') || currentUser?.role === 'ADMIN') && <DashboardCard icon={ListChecks} label="Feature Access" onClick={() => setActiveTab('FEATURE_TIERS')} color="violet" />}
-                      {(hasPermission('MANAGE_CONTENT') || currentUser?.role === 'ADMIN') && <DashboardCard icon={Image} label="Explore Banners" onClick={() => setActiveTab('EXPLORE_BANNERS')} color="pink" />}
+                          {/* <DashboardCard icon={Settings} label="App Modes" onClick={() => setActiveTab('APP_MODES')} color="green" /> */}
+                          {/* {(hasPermission('MANAGE_SETTINGS') || currentUser?.role === 'ADMIN') && <DashboardCard icon={ListChecks} label="Feature Access" onClick={() => setActiveTab('FEATURE_TIERS')} color="violet" />} */}
+                      {/* {(hasPermission('MANAGE_CONTENT') || currentUser?.role === 'ADMIN') && <DashboardCard icon={Image} label="Explore Banners" onClick={() => setActiveTab('EXPLORE_BANNERS')} color="pink" />} */}
                           {currentUser?.role === 'ADMIN' && <DashboardCard icon={PenTool} label="Blogger Hub" onClick={() => setActiveTab('BLOGGER_HUB')} color="orange" />}
-                          <DashboardCard icon={Sparkles} label="Ads Config" onClick={() => setActiveTab('CONFIG_ADS')} color="rose" />
+                          {/* <DashboardCard icon={Sparkles} label="Ads Config" onClick={() => setActiveTab('CONFIG_ADS')} color="rose" /> */}
                           <DashboardCard icon={Gamepad2} label="Game Config" onClick={() => setActiveTab('CONFIG_GAME')} color="orange" />
                           <DashboardCard icon={Banknote} label="Payment" onClick={() => setActiveTab('CONFIG_PAYMENT')} color="emerald" />
                           <DashboardCard icon={Globe} label="External Apps" onClick={() => setActiveTab('CONFIG_EXTERNAL_APPS')} color="indigo" />

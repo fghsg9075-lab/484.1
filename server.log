@@ -1,13 +1,109 @@
  INFO  Accepting connections at http://localhost:5000
- HTTP  2/11/2026 2:02:43 PM ::1 GET /
- HTTP  2/11/2026 2:02:43 PM ::1 Returned 200 in 28 ms
- HTTP  2/11/2026 2:02:44 PM ::1 GET /assets/index-BielM18c.js
- HTTP  2/11/2026 2:02:44 PM ::1 GET /assets/index-CIp054DG.css
- HTTP  2/11/2026 2:02:44 PM ::1 Returned 200 in 4 ms
- HTTP  2/11/2026 2:02:44 PM ::1 Returned 200 in 32 ms
- HTTP  2/11/2026 2:02:45 PM ::1 GET /
- HTTP  2/11/2026 2:02:45 PM ::1 Returned 304 in 1 ms
- HTTP  2/11/2026 2:02:45 PM ::1 GET /assets/index-CIp054DG.css
- HTTP  2/11/2026 2:02:45 PM ::1 GET /assets/index-BielM18c.js
- HTTP  2/11/2026 2:02:45 PM ::1 Returned 304 in 3 ms
- HTTP  2/11/2026 2:02:45 PM ::1 Returned 304 in 5 ms
+ HTTP  2/11/2026 3:03:56 PM ::1 GET /
+ HTTP  2/11/2026 3:03:56 PM ::1 Returned 200 in 27 ms
+ HTTP  2/11/2026 3:03:56 PM ::1 GET /assets/index-BTLhw_Ja.js
+ HTTP  2/11/2026 3:03:56 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 3:03:56 PM ::1 Returned 200 in 7 ms
+ HTTP  2/11/2026 3:03:56 PM ::1 Returned 200 in 33 ms
+ HTTP  2/11/2026 3:03:57 PM ::1 GET /
+ HTTP  2/11/2026 3:03:57 PM ::1 Returned 304 in 5 ms
+ HTTP  2/11/2026 3:03:57 PM ::1 GET /assets/index-BTLhw_Ja.js
+ HTTP  2/11/2026 3:03:57 PM ::1 Returned 304 in 2 ms
+ HTTP  2/11/2026 3:03:57 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 3:03:57 PM ::1 Returned 304 in 3 ms
+ HTTP  2/11/2026 3:06:35 PM ::1 GET /
+ HTTP  2/11/2026 3:06:35 PM ::1 Returned 200 in 2 ms
+ HTTP  2/11/2026 3:06:35 PM ::1 GET /assets/index-BTLhw_Ja.js
+ HTTP  2/11/2026 3:06:35 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 3:06:35 PM ::1 Returned 200 in 3 ms
+ HTTP  2/11/2026 3:06:35 PM ::1 Returned 200 in 2 ms
+ HTTP  2/11/2026 3:06:36 PM ::1 GET /
+ HTTP  2/11/2026 3:06:36 PM ::1 Returned 304 in 3 ms
+ HTTP  2/11/2026 3:06:36 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 3:06:36 PM ::1 GET /assets/index-BTLhw_Ja.js
+ HTTP  2/11/2026 3:06:36 PM ::1 Returned 304 in 1 ms
+ HTTP  2/11/2026 3:06:36 PM ::1 Returned 304 in 1 ms
+ HTTP  2/11/2026 3:08:20 PM ::1 GET /
+ HTTP  2/11/2026 3:08:20 PM ::1 Returned 200 in 2 ms
+ HTTP  2/11/2026 3:08:20 PM ::1 GET /assets/index-BTLhw_Ja.js
+ HTTP  2/11/2026 3:08:20 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 3:08:20 PM ::1 Returned 200 in 4 ms
+ HTTP  2/11/2026 3:08:20 PM ::1 Returned 200 in 2 ms
+ HTTP  2/11/2026 3:08:21 PM ::1 GET /
+ HTTP  2/11/2026 3:08:21 PM ::1 Returned 304 in 1 ms
+ HTTP  2/11/2026 3:08:21 PM ::1 GET /assets/index-BTLhw_Ja.js
+ HTTP  2/11/2026 3:08:21 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 3:08:21 PM ::1 Returned 304 in 1 ms
+ HTTP  2/11/2026 3:08:21 PM ::1 Returned 304 in 2 ms
+ HTTP  2/11/2026 3:10:35 PM ::1 GET /
+ HTTP  2/11/2026 3:10:35 PM ::1 Returned 200 in 4 ms
+ HTTP  2/11/2026 3:10:35 PM ::1 GET /assets/index-BTLhw_Ja.js
+ HTTP  2/11/2026 3:10:35 PM ::1 Returned 200 in 4 ms
+ HTTP  2/11/2026 3:10:35 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 3:10:35 PM ::1 Returned 200 in 2 ms
+ HTTP  2/11/2026 3:10:36 PM ::1 GET /
+ HTTP  2/11/2026 3:10:36 PM ::1 Returned 304 in 3 ms
+ HTTP  2/11/2026 3:10:36 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 3:10:36 PM ::1 GET /assets/index-BTLhw_Ja.js
+ HTTP  2/11/2026 3:10:36 PM ::1 Returned 304 in 1 ms
+ HTTP  2/11/2026 3:10:36 PM ::1 Returned 304 in 1 ms
+ HTTP  2/11/2026 3:12:11 PM ::1 GET /
+ HTTP  2/11/2026 3:12:11 PM ::1 Returned 200 in 1 ms
+ HTTP  2/11/2026 3:12:11 PM ::1 GET /assets/index-BTLhw_Ja.js
+ HTTP  2/11/2026 3:12:11 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 3:12:11 PM ::1 Returned 200 in 3 ms
+ HTTP  2/11/2026 3:12:11 PM ::1 Returned 200 in 3 ms
+ HTTP  2/11/2026 3:12:12 PM ::1 GET /
+ HTTP  2/11/2026 3:12:12 PM ::1 Returned 304 in 2 ms
+ HTTP  2/11/2026 3:12:12 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 3:12:12 PM ::1 GET /assets/index-BTLhw_Ja.js
+ HTTP  2/11/2026 3:12:12 PM ::1 Returned 304 in 1 ms
+ HTTP  2/11/2026 3:12:12 PM ::1 Returned 304 in 3 ms
+ HTTP  2/11/2026 3:14:53 PM ::1 GET /
+ HTTP  2/11/2026 3:14:53 PM ::1 Returned 200 in 1 ms
+ HTTP  2/11/2026 3:14:53 PM ::1 GET /assets/index-BTLhw_Ja.js
+ HTTP  2/11/2026 3:14:53 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 3:14:53 PM ::1 Returned 200 in 2 ms
+ HTTP  2/11/2026 3:14:53 PM ::1 Returned 200 in 2 ms
+ HTTP  2/11/2026 3:14:54 PM ::1 GET /
+ HTTP  2/11/2026 3:14:54 PM ::1 Returned 304 in 1 ms
+ HTTP  2/11/2026 3:14:54 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 3:14:54 PM ::1 GET /assets/index-BTLhw_Ja.js
+ HTTP  2/11/2026 3:14:54 PM ::1 Returned 304 in 2 ms
+ HTTP  2/11/2026 3:14:54 PM ::1 Returned 304 in 1 ms
+ HTTP  2/11/2026 3:17:09 PM ::1 GET /
+ HTTP  2/11/2026 3:17:09 PM ::1 Returned 200 in 2 ms
+ HTTP  2/11/2026 3:17:09 PM ::1 GET /assets/index-BTLhw_Ja.js
+ HTTP  2/11/2026 3:17:09 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 3:17:09 PM ::1 Returned 200 in 1 ms
+ HTTP  2/11/2026 3:17:09 PM ::1 Returned 200 in 2 ms
+ HTTP  2/11/2026 3:17:10 PM ::1 GET /
+ HTTP  2/11/2026 3:17:10 PM ::1 Returned 304 in 2 ms
+ HTTP  2/11/2026 3:17:10 PM ::1 GET /assets/index-BTLhw_Ja.js
+ HTTP  2/11/2026 3:17:10 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 3:17:10 PM ::1 Returned 304 in 1 ms
+ HTTP  2/11/2026 3:17:10 PM ::1 Returned 304 in 2 ms
+ HTTP  2/11/2026 3:18:14 PM ::1 GET /
+ HTTP  2/11/2026 3:18:14 PM ::1 Returned 200 in 3 ms
+ HTTP  2/11/2026 3:18:14 PM ::1 GET /assets/index-BTLhw_Ja.js
+ HTTP  2/11/2026 3:18:14 PM ::1 Returned 200 in 1 ms
+ HTTP  2/11/2026 3:18:14 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 3:18:14 PM ::1 Returned 200 in 1 ms
+ HTTP  2/11/2026 3:18:15 PM ::1 GET /
+ HTTP  2/11/2026 3:18:15 PM ::1 Returned 304 in 1 ms
+ HTTP  2/11/2026 3:18:15 PM ::1 GET /assets/index-BTLhw_Ja.js
+ HTTP  2/11/2026 3:18:15 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 3:18:15 PM ::1 Returned 304 in 1 ms
+ HTTP  2/11/2026 3:18:15 PM ::1 Returned 304 in 6 ms
+ HTTP  2/11/2026 3:20:19 PM ::1 GET /
+ HTTP  2/11/2026 3:20:19 PM ::1 Returned 200 in 2 ms
+ HTTP  2/11/2026 3:20:19 PM ::1 GET /assets/index-BTLhw_Ja.js
+ HTTP  2/11/2026 3:20:19 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 3:20:19 PM ::1 Returned 200 in 3 ms
+ HTTP  2/11/2026 3:20:19 PM ::1 Returned 200 in 2 ms
+ HTTP  2/11/2026 3:20:20 PM ::1 GET /
+ HTTP  2/11/2026 3:20:20 PM ::1 Returned 304 in 4 ms
+ HTTP  2/11/2026 3:20:20 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 3:20:20 PM ::1 GET /assets/index-BTLhw_Ja.js
+ HTTP  2/11/2026 3:20:20 PM ::1 Returned 304 in 1 ms
+ HTTP  2/11/2026 3:20:20 PM ::1 Returned 304 in 1 ms

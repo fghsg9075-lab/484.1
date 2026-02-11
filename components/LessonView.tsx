@@ -276,7 +276,10 @@ export const LessonView: React.FC<Props> = ({
                           <p className="text-[10px] text-orange-600 font-bold uppercase tracking-widest">Recommended Reading</p>
                       </div>
                   </div>
-                  <button onClick={() => setViewingNote(null)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200"><X size={20}/></button>
+                  <div className="flex items-center gap-2">
+                    <SpeakButton text={viewingNote.content} className="p-2 bg-orange-50 text-orange-600 hover:bg-orange-100" />
+                    <button onClick={() => setViewingNote(null)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200"><X size={20}/></button>
+                  </div>
               </header>
 
               {/* Content */}
@@ -651,14 +654,17 @@ export const LessonView: React.FC<Props> = ({
                 {isPremium && content?.aiAnalysisText && (
                     <div className="bg-white p-6 rounded-3xl shadow-sm border border-purple-100 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-purple-100 rounded-full blur-3xl opacity-50 -mr-10 -mt-10"></div>
-                        <div className="flex items-center gap-3 mb-4 relative z-10">
-                            <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-lg shadow-purple-200">
-                                <BrainCircuit size={20} />
+                        <div className="flex items-center justify-between mb-4 relative z-10">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-lg shadow-purple-200">
+                                    <BrainCircuit size={20} />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-slate-800 text-lg">AI Performance Report</h3>
+                                    <p className="text-xs text-purple-600 font-bold">Deep Insights & Strategy</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="font-black text-slate-800 text-lg">AI Performance Report</h3>
-                                <p className="text-xs text-purple-600 font-bold">Deep Insights & Strategy</p>
-                            </div>
+                            <SpeakButton text={content.aiAnalysisText} className="p-2 bg-purple-50 text-purple-600 hover:bg-purple-100" />
                         </div>
                         <div className="prose prose-sm prose-slate max-w-none prose-p:text-slate-600 prose-headings:font-black prose-headings:text-slate-800 bg-slate-50 p-4 rounded-xl border border-slate-100">
                             <ReactMarkdown>{content.aiAnalysisText}</ReactMarkdown>
@@ -823,6 +829,8 @@ export const LessonView: React.FC<Props> = ({
                        const userAnswer = mcqState[idx];
                        const isAnswered = userAnswer !== undefined && userAnswer !== null;
                        
+                       const fullQuestionText = `${q.question}. Options are: ${q.options.map((opt, i) => `Option ${i+1}: ${opt}`).join('. ')}`;
+
                        return (
                            <div key={idx} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
                                <div className="flex justify-between items-start mb-4 gap-3">
@@ -830,7 +838,7 @@ export const LessonView: React.FC<Props> = ({
                                        <span className="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 font-bold mt-0.5">{idx + 1}</span>
                                        <div dangerouslySetInnerHTML={{ __html: q.question }} className="prose prose-sm max-w-none" />
                                    </div>
-                                   <SpeakButton text={q.question} className="shrink-0" />
+                                   <SpeakButton text={fullQuestionText} className="shrink-0" />
                                </div>
                                <div className="space-y-2">
                                    {q.options.map((opt, oIdx) => {
@@ -865,7 +873,7 @@ export const LessonView: React.FC<Props> = ({
                                                <span className="relative z-10 flex justify-between items-center w-full gap-2">
                                                    <div dangerouslySetInnerHTML={{ __html: opt }} className="flex-1" />
                                                    <div className="flex items-center gap-2 shrink-0">
-                                                      <SpeakButton text={opt} className="p-1" iconSize={14} />
+                                                      {/* Removed Option SpeakButton */}
                                                       {showResults && analysisUnlocked && oIdx === q.correctAnswer && <CheckCircle size={16} className="text-green-600" />}
                                                       {showResults && analysisUnlocked && userAnswer === oIdx && userAnswer !== q.correctAnswer && <XCircle size={16} className="text-red-500" />}
                                                    </div>

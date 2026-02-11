@@ -11,7 +11,7 @@ import { generateMorningInsight } from '../services/morningInsight';
 import { RedeemSection } from './RedeemSection';
 import { PrizeList } from './PrizeList';
 import { Store } from './Store';
-import { Layout, Gift, Sparkles, Megaphone, Lock, BookOpen, AlertCircle, Edit, Settings, Play, Pause, RotateCcw, MessageCircle, Gamepad2, Timer, CreditCard, Send, CheckCircle, Mail, X, Ban, Smartphone, Trophy, ShoppingBag, ArrowRight, Video, Youtube, Home, User as UserIcon, Book, BookOpenText, List, BarChart3, Award, Bell, Headphones, LifeBuoy, WifiOff, Zap, Star, Crown, History, ListChecks, Rocket, Ticket, TrendingUp, BrainCircuit, FileText, CheckSquare, Menu, LayoutGrid, Compass, User as UserIconOutline } from 'lucide-react';
+import { Layout, Gift, Sparkles, Megaphone, Lock, BookOpen, AlertCircle, Edit, Settings, Play, Pause, RotateCcw, MessageCircle, Gamepad2, Timer, CreditCard, Send, CheckCircle, Mail, X, Ban, Smartphone, Trophy, ShoppingBag, ArrowRight, Video, Youtube, Home, User as UserIcon, Book, BookOpenText, List, BarChart3, Award, Bell, Headphones, LifeBuoy, WifiOff, Zap, Star, Crown, History, ListChecks, Rocket, Ticket, TrendingUp, BrainCircuit, FileText, CheckSquare, Menu, LayoutGrid, Compass, User as UserIconOutline, MessageSquare } from 'lucide-react';
 import { SubjectSelection } from './SubjectSelection';
 import { BannerCarousel } from './BannerCarousel';
 import { ChapterSelection } from './ChapterSelection'; // Imported for Video Flow
@@ -43,12 +43,10 @@ import { CustomBloggerPage } from './CustomBloggerPage';
 import { ReferralPopup } from './ReferralPopup';
 import { StudentAiAssistant } from './StudentAiAssistant';
 import { SpeakButton } from './SpeakButton';
- feature-dashboard-redesign-cleanup-13635731507476622996
 import { PerformanceGraph } from './PerformanceGraph';
 import { StudentSidebar } from './StudentSidebar';
-import { PerformanceGraph } from './PerformanceGraph';
 import { StudyGoalTimer } from './StudyGoalTimer';
-import { ExplorePage } from './ExplorePage';main
+import { ExplorePage } from './ExplorePage';
 
 interface Props {
   user: User;
@@ -163,7 +161,6 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
   // Monthly Report
   const [showMonthlyReport, setShowMonthlyReport] = useState(false);
   const [showReferralPopup, setShowReferralPopup] = useState(false);
-feature-dashboard-redesign-cleanup-13635731507476622996
   const [showSidebar, setShowSidebar] = useState(false);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -180,7 +177,6 @@ feature-dashboard-redesign-cleanup-13635731507476622996
         }
     }
   }, [activeTab]);
-main
 
   // --- REFERRAL POPUP CHECK ---
   useEffect(() => {
@@ -1029,7 +1025,6 @@ main
       // 1. HOME TAB
       if (activeTab === 'HOME') {
           return (
- feature-dashboard-redesign-cleanup-13635731507476622996
               <div className="space-y-4 pb-24">
                 {/* NEW HEADER DESIGN */}
                 <div className="bg-white p-4 rounded-b-3xl shadow-sm border-b border-slate-200 mb-2 flex items-center justify-between sticky top-0 z-40">
@@ -1287,88 +1282,8 @@ main
                                   <span className="text-xs font-black relative z-10">CUSTOM</span>
                                   <span className="text-[8px] opacity-70 relative z-10">Explore Page</span>
                               </button>}
-                          </div
-              <div className="space-y-6 pb-24">
-                  {/* Custom Header */}
-                  <div className="flex justify-between items-center py-4 px-2">
-                      <div className="flex items-center gap-3">
-                          <button onClick={() => setIsSidebarOpen(true)} className="p-2 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors group">
-                              {/* Custom 2-line Menu Icon */}
-                              <div className="flex flex-col gap-1.5 w-6 items-center justify-center">
-                                  <div className="w-5 h-0.5 bg-slate-800 rounded-full group-hover:bg-slate-600 transition-colors"></div>
-                                  <div className="w-5 h-0.5 bg-slate-800 rounded-full group-hover:bg-slate-600 transition-colors"></div>
-                              </div>
-                          </button>
-                          <div>
-                              <h1 className="font-black text-xl text-slate-900 leading-none">{settings?.appName || 'IIC'}</h1>
-                              <p className="text-xs font-bold text-slate-400 font-mono tracking-widest mt-0.5">ID: {user.displayId || user.id.slice(0, 6)}</p>
-                          </div> main
-                      </div>
-                      <div className="flex items-center gap-3">
-                         <div className="text-right hidden sm:block">
-                             <p className="text-[10px] font-bold text-slate-400 uppercase">Credits</p>
-                             <p className="text-lg font-black text-blue-600 leading-none">{user.credits}</p>
-                         </div>
-                         <div className="text-right border-l pl-3 border-slate-200 hidden sm:block">
-                             <p className="text-[10px] font-bold text-slate-400 uppercase">Streak</p>
-                             <p className="text-lg font-black text-orange-500 leading-none">{user.streak}🔥</p>
-                         </div>
-                         {/* Mobile Compact View */}
-                         <div className="sm:hidden flex items-center gap-2">
-                             <div className="bg-blue-50 px-2 py-1 rounded">
-                                 <span className="text-xs font-black text-blue-600">{user.credits} CR</span>
-                             </div>
-                             <div className="bg-orange-50 px-2 py-1 rounded">
-                                 <span className="text-xs font-black text-orange-500">{user.streak}🔥</span>
-                             </div>
-                         </div>
-                      </div>
-                  </div>
-
-                  {/* Performance Graph */}
-                  {!(settings?.hiddenFeatures?.includes('f50')) && (
-                      <PerformanceGraph
-                          user={user}
-                          onViewNotes={(topic) => {
-                              onTabChange('PDF');
-                          }}
-                          onViewAnalytics={() => onTabChange('ANALYTICS')}
-                      />
-                  )}
-
-                  {/* Study Timer */}
-                  <StudyGoalTimer
-                      dailyStudySeconds={dailyStudySeconds}
-                      targetSeconds={dailyTargetSeconds}
-                      onSetTarget={(sec) => {
-                          setDailyTargetSeconds(sec);
-                          localStorage.setItem(`nst_goal_${user.id}`, (sec / 3600).toString());
-                      }}
-                  />
-
-                  {/* Big Buttons */}
-                  <div className="grid grid-cols-2 gap-4 px-2">
-                      <button
-                          onClick={() => onTabChange('VIDEO')}
-                          className="bg-gradient-to-br from-red-500 to-rose-700 text-white p-6 rounded-3xl shadow-xl shadow-red-200 hover:shadow-2xl transition-all active:scale-95 flex flex-col items-center gap-3 relative overflow-hidden group border border-red-400/20"
-                      >
-                          <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform blur-xl"></div>
-                          <div className="bg-white/20 p-3 rounded-full backdrop-blur-sm relative z-10">
-                              <Play size={32} fill="currentColor" className="relative z-10" />
                           </div>
-                          <span className="font-black text-lg relative z-10 uppercase tracking-wide drop-shadow-sm">Videos</span>
-                      </button>
-
-                      <button
-                          onClick={() => onTabChange('COURSES')}
-                          className="bg-gradient-to-br from-blue-500 to-indigo-700 text-white p-6 rounded-3xl shadow-xl shadow-blue-200 hover:shadow-2xl transition-all active:scale-95 flex flex-col items-center gap-3 relative overflow-hidden group border border-blue-400/20"
-                      >
-                          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2 group-hover:scale-110 transition-transform blur-xl"></div>
-                          <div className="bg-white/20 p-3 rounded-full backdrop-blur-sm relative z-10">
-                              <BookOpen size={32} className="relative z-10" />
-                          </div>
-                          <span className="font-black text-lg relative z-10 uppercase tracking-wide drop-shadow-sm">Courses</span>
-                      </button>
+                      </div>
                   </div>
               </div>
           );

@@ -1,0 +1,13 @@
+ INFO  Accepting connections at http://localhost:5000
+ HTTP  2/11/2026 2:02:43 PM ::1 GET /
+ HTTP  2/11/2026 2:02:43 PM ::1 Returned 200 in 28 ms
+ HTTP  2/11/2026 2:02:44 PM ::1 GET /assets/index-BielM18c.js
+ HTTP  2/11/2026 2:02:44 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 2:02:44 PM ::1 Returned 200 in 4 ms
+ HTTP  2/11/2026 2:02:44 PM ::1 Returned 200 in 32 ms
+ HTTP  2/11/2026 2:02:45 PM ::1 GET /
+ HTTP  2/11/2026 2:02:45 PM ::1 Returned 304 in 1 ms
+ HTTP  2/11/2026 2:02:45 PM ::1 GET /assets/index-CIp054DG.css
+ HTTP  2/11/2026 2:02:45 PM ::1 GET /assets/index-BielM18c.js
+ HTTP  2/11/2026 2:02:45 PM ::1 Returned 304 in 3 ms
+ HTTP  2/11/2026 2:02:45 PM ::1 Returned 304 in 5 ms

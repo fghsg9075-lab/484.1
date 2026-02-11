@@ -65,6 +65,45 @@ interface Props {
   onToggleDarkMode?: (v: boolean) => void;
 }
 
+const DashboardSectionWrapper = ({
+    id,
+    children,
+    label,
+    settings,
+    isLayoutEditing,
+    onToggleVisibility
+}: {
+    id: string,
+    children: React.ReactNode,
+    label: string,
+    settings?: SystemSettings,
+    isLayoutEditing: boolean,
+    onToggleVisibility: (id: string) => void
+}) => {
+    const isVisible = settings?.dashboardLayout?.[id]?.visible !== false;
+
+    if (!isVisible && !isLayoutEditing) return null;
+
+    return (
+        <div className={`relative ${isLayoutEditing ? 'border-2 border-dashed border-yellow-400 p-2 rounded-xl mb-4 bg-yellow-50/10' : ''}`}>
+            {isLayoutEditing && (
+                <div className="absolute -top-3 left-2 bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 rounded shadow z-50 flex items-center gap-2">
+                    <span>{label}</span>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onToggleVisibility(id); }}
+                        className={`px-2 py-0.5 rounded text-xs ${isVisible ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}
+                    >
+                        {isVisible ? 'ON' : 'OFF'}
+                    </button>
+                </div>
+            )}
+            <div className={!isVisible ? 'opacity-50 grayscale pointer-events-none' : ''}>
+                {children}
+            </div>
+        </div>
+    );
+};
+
 export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onSubjectSelect, onRedeemSuccess, settings, onStartWeeklyTest, activeTab, onTabChange, setFullScreen, onNavigate, isImpersonating, onNavigateToChapter, isDarkMode, onToggleDarkMode }) => {
   
   const hasPermission = (featureId: string) => {
@@ -860,30 +899,6 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
 
   const isGameEnabled = settings?.isGameEnabled ?? true;
 
-  const DashboardSectionWrapper = ({ id, children, label }: { id: string, children: React.ReactNode, label: string }) => {
-      const isVisible = settings?.dashboardLayout?.[id]?.visible !== false;
-      
-      if (!isVisible && !isLayoutEditing) return null;
-
-      return (
-          <div className={`relative ${isLayoutEditing ? 'border-2 border-dashed border-yellow-400 p-2 rounded-xl mb-4 bg-yellow-50/10' : ''}`}>
-              {isLayoutEditing && (
-                  <div className="absolute -top-3 left-2 bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 rounded shadow z-50 flex items-center gap-2">
-                      <span>{label}</span>
-                      <button 
-                          onClick={(e) => { e.stopPropagation(); toggleLayoutVisibility(id); }}
-                          className={`px-2 py-0.5 rounded text-xs ${isVisible ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}
-                      >
-                          {isVisible ? 'ON' : 'OFF'}
-                      </button>
-                  </div>
-              )}
-              <div className={!isVisible ? 'opacity-50 grayscale pointer-events-none' : ''}>
-                  {children}
-              </div>
-          </div>
-      );
-  };
 
   // --- RENDER BASED ON ACTIVE TAB ---
   const renderMainContent = () => {
@@ -896,9 +911,13 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => setShowSidebar(true)}
-                            className="bg-slate-50 p-2 rounded-xl hover:bg-slate-100 transition-colors"
+                            className="bg-white border border-slate-200 shadow-sm px-3 py-2 rounded-xl hover:bg-slate-50 transition-all flex items-center gap-2 group active:scale-95"
                         >
-                            <List size={24} className="text-slate-600" />
+                            <div className="space-y-1">
+                                <span className="block w-5 h-0.5 bg-slate-600 group-hover:bg-blue-600 transition-colors rounded-full"></span>
+                                <span className="block w-3 h-0.5 bg-slate-600 group-hover:bg-blue-600 transition-colors rounded-full"></span>
+                                <span className="block w-5 h-0.5 bg-slate-600 group-hover:bg-blue-600 transition-colors rounded-full"></span>
+                            </div>
                         </button>
                         <div>
                             <div className="flex items-center gap-2">
@@ -947,7 +966,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                 </div>
 
                 {/* PERFORMANCE GRAPH */}
-                <DashboardSectionWrapper id="section_performance" label="Performance">
+                <DashboardSectionWrapper id="section_performance" label="Performance" settings={settings} isLayoutEditing={isLayoutEditing} onToggleVisibility={toggleLayoutVisibility}>
                     <PerformanceGraph
                         history={user.mcqHistory || []}
                         user={user}
@@ -958,7 +977,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                 </DashboardSectionWrapper>
 
                 {/* STUDY TIMER */}
-                <DashboardSectionWrapper id="section_timer" label="Study Goal">
+                <DashboardSectionWrapper id="section_timer" label="Study Goal" settings={settings} isLayoutEditing={isLayoutEditing} onToggleVisibility={toggleLayoutVisibility}>
                     <StudyGoalTimer
                         dailyStudySeconds={dailyStudySeconds}
                         targetSeconds={dailyTargetSeconds}
@@ -970,7 +989,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                 </DashboardSectionWrapper>
 
                 {/* MAIN ACTION BUTTONS */}
-                <DashboardSectionWrapper id="section_main_actions" label="Main Actions">
+                <DashboardSectionWrapper id="section_main_actions" label="Main Actions" settings={settings} isLayoutEditing={isLayoutEditing} onToggleVisibility={toggleLayoutVisibility}>
                     <div className="grid grid-cols-2 gap-4">
                         <button
                             onClick={() => { onTabChange('COURSES'); setContentViewStep('SUBJECTS'); }}
@@ -1008,17 +1027,38 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                   {/* BANNERS */}
                   <div className="h-48 rounded-2xl overflow-hidden shadow-lg relative border-2 border-slate-900 mb-6">
                         <BannerCarousel
+                            onBannerClick={(link) => {
+                                if (link === 'STORE' || link === 'CUSTOM_PAGE' || link === 'VIDEO' || link === 'PDF' || link === 'MCQ' || link === 'AUDIO') {
+                                    onTabChange(link as any);
+                                } else if (link.startsWith('http')) {
+                                    window.open(link, '_blank');
+                                }
+                            }}
                             slides={[
-                                ...(settings?.exploreBanners?.filter(b => b.isActive).map(b => ({
-                                    id: b.id, image: b.imageUrl, link: b.actionUrl
-                                })) || []),
+                                {
+                                    id: 'premium_features',
+                                    image: 'https://img.freepik.com/free-vector/gradient-ui-ux-background_23-2149052117.jpg',
+                                    title: 'Unlock Premium',
+                                    subtitle: 'Notes, Tests, Videos & Audio',
+                                    link: 'STORE'
+                                },
+                                {
+                                    id: 'whats_new',
+                                    image: 'https://img.freepik.com/free-vector/flat-news-concept-background_23-2148194276.jpg',
+                                    title: "What's New?",
+                                    subtitle: 'Latest Updates & Features',
+                                    link: 'CUSTOM_PAGE'
+                                },
                                 ...(showDiscountBanner ? [{
                                     id: 'discount',
                                     image: 'https://img.freepik.com/free-vector/gradient-sale-background_23-2148934477.jpg',
                                     title: 'Special Offer',
                                     subtitle: `${settings?.specialDiscountEvent?.discountPercent || 50}% OFF Ends Soon!`,
-                                    link: ''
-                                }] : [])
+                                    link: 'STORE'
+                                }] : []),
+                                ...(settings?.exploreBanners?.filter(b => b.isActive).map(b => ({
+                                    id: b.id, image: b.imageUrl, link: b.actionUrl
+                                })) || [])
                             ]}
                             interval={3000}
                             autoPlay={true}

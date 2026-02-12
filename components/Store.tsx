@@ -393,7 +393,11 @@ export const Store: React.FC<Props> = ({ user, settings }) => {
                   }
 
                   const isYearly = plan.name.includes('Yearly');
+                  // Re-calculate discount percent based on FINAL price vs ORIGINAL
                   const discountPercent = original > price ? Math.round(((original - price) / original) * 100) : 0;
+
+                  // Check if renewal bonus is active for this user
+                  const hasRenewalBonus = user.isPremium || (user.subscriptionHistory && user.subscriptionHistory.length > 0);
 
                   return (
                       <button
@@ -418,7 +422,7 @@ export const Store: React.FC<Props> = ({ user, settings }) => {
                               </span>
                               {discountPercent > 0 && (
                                   <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-bold">
-                                      {discountPercent}% OFF
+                                      {discountPercent}% OFF {hasRenewalBonus && '(+5% Bonus)'}
                                   </span>
                               )}
                           </div>

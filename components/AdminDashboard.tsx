@@ -1501,11 +1501,40 @@ const AdminDashboardInner: React.FC<Props> = ({ onNavigate, settings, onUpdateSe
       setEditSubscriptionMinutes(0);
       setEditSubscriptionSeconds(0);
       
-      // Auto-fill price from store settings
+      // Auto-fill price from store settings with Discount Logic
       if (user.subscriptionTier && user.subscriptionTier !== 'FREE' && user.subscriptionTier !== 'CUSTOM') {
           const tierPrices = subPrices[user.subscriptionTier as keyof typeof subPrices];
           const level = user.subscriptionLevel || 'BASIC';
-          setEditSubscriptionPrice(tierPrices ? tierPrices[level as keyof typeof tierPrices] : 0);
+          let basePrice = tierPrices ? tierPrices[level as keyof typeof tierPrices] : 0;
+
+          // Apply Event Discount + Renewal Bonus Logic (Same as Store.tsx)
+          const event = localSettings.specialDiscountEvent;
+          let discountPercentVal = 0;
+          const isSubscribed = user.isPremium && user.subscriptionEndDate && new Date(user.subscriptionEndDate) > new Date();
+
+          // 1. Check Event Validity
+          let isEventActive = false;
+          if (event?.enabled && event.startsAt && event.endsAt) {
+              const now = Date.now();
+              isEventActive = now >= new Date(event.startsAt).getTime() && now < new Date(event.endsAt).getTime();
+          }
+
+          if (isEventActive) {
+              if ((isSubscribed && event?.showToPremiumUsers) || (!isSubscribed && event?.showToFreeUsers)) {
+                  discountPercentVal += (event?.discountPercent || 0);
+              }
+          }
+
+          // 2. Renewal Bonus (Check Premium or History)
+          if (user.isPremium || (user.subscriptionHistory && user.subscriptionHistory.length > 0)) {
+              discountPercentVal += 5;
+          }
+
+          if (discountPercentVal > 0) {
+              basePrice = Math.round(basePrice * (1 - discountPercentVal / 100));
+          }
+
+          setEditSubscriptionPrice(basePrice);
       } else {
           setEditSubscriptionPrice(0);
       }

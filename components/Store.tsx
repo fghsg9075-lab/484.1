@@ -350,16 +350,25 @@ export const Store: React.FC<Props> = ({ user, settings }) => {
                   const original = tierType === 'BASIC' ? plan.basicOriginalPrice : plan.ultraOriginalPrice;
                   let price = tierType === 'BASIC' ? plan.basicPrice : plan.ultraPrice;
 
-                  // Apply Event Discount ONLY if event is active
+                  // Apply Event Discount + Renewal Logic
+                  let discountPercentVal = 0;
+
+                  // 1. Base Event Discount (if active)
                   if (activeEvent) {
-                      const eventDiscount = (isSubscribed ? (event?.renewalDiscountPercent || event?.discountPercent) : event?.discountPercent) || 0;
                       if ((isSubscribed && event?.showToPremiumUsers) || (!isSubscribed && event?.showToFreeUsers)) {
-                          price = Math.round(price * (1 - eventDiscount / 100));
+                          discountPercentVal += (event?.discountPercent || 0);
                       }
-                  } else if (settings?.specialDiscountEvent?.discountPercent && !event?.enabled) {
-                      // Unified fallback if general discount exists but specific event enabled flag is handled differently
-                      const genDiscount = settings.specialDiscountEvent.discountPercent;
-                      price = Math.round(price * (1 - genDiscount / 100));
+                  }
+
+                  // 2. Renewal Bonus (5% Extra for Existing Premium or History)
+                  // "jab koi user subscription liya ho" -> Check current premium OR history
+                  if (user.isPremium || (user.subscriptionHistory && user.subscriptionHistory.length > 0)) {
+                      discountPercentVal += 5;
+                  }
+
+                  // Apply Total Discount
+                  if (discountPercentVal > 0) {
+                      price = Math.round(price * (1 - discountPercentVal / 100));
                   }
 
                   const isYearly = plan.name.includes('Yearly');
@@ -430,11 +439,19 @@ export const Store: React.FC<Props> = ({ user, settings }) => {
                   {packages.slice(0, 6).map(pkg => {
                       let finalPrice = pkg.price;
                       // Apply Discount Logic to Credits too if applicable
+                      let creditDiscount = 0;
                       if (activeEvent) {
-                          const eventDiscount = (isSubscribed ? (event?.renewalDiscountPercent || event?.discountPercent) : event?.discountPercent) || 0;
                           if ((isSubscribed && event?.showToPremiumUsers) || (!isSubscribed && event?.showToFreeUsers)) {
-                              finalPrice = Math.round(pkg.price * (1 - eventDiscount / 100));
+                              creditDiscount += (event?.discountPercent || 0);
                           }
+                      }
+                      // Renewal Bonus for Credits too? (Usually implies Subscription, but let's keep consistent if they are "Subscription User")
+                      if (user.isPremium || (user.subscriptionHistory && user.subscriptionHistory.length > 0)) {
+                          creditDiscount += 5;
+                      }
+
+                      if (creditDiscount > 0) {
+                          finalPrice = Math.round(pkg.price * (1 - creditDiscount / 100));
                       }
 
                       return (

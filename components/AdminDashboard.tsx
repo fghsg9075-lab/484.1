@@ -8775,6 +8775,19 @@ Capital of India?       Mumbai  Delhi   Kolkata Chennai 2       Delhi is the cap
                       />
                   </div>
 
+                  <div className="bg-white p-3 rounded-lg border border-purple-100 mb-4 flex items-center justify-between">
+                      <div>
+                          <p className="font-bold text-slate-700 text-sm">AI Study Roadmap (Daily Goal)</p>
+                          <p className="text-[10px] text-slate-500">Auto-generate daily study plans for students based on weakness.</p>
+                      </div>
+                      <input
+                          type="checkbox"
+                          checked={localSettings.isAiRoadmapEnabled === true}
+                          onChange={() => toggleSetting('isAiRoadmapEnabled')}
+                          className="w-5 h-5 accent-purple-600"
+                      />
+                  </div>
+
                   <div className="grid grid-cols-3 gap-4">
                       <div>
                           <label className="text-xs font-bold text-slate-500 uppercase">Test Entry Cost</label>

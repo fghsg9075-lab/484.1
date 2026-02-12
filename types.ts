@@ -547,6 +547,9 @@ export interface SystemSettings {
   logoutMessage?: string; // "Remember your password? Login won't be possible without it."
   guestWarningMessage?: string; // "Register to save your progress."
   missedStudyMessage?: string; // "{name}, you haven't studied today! Where were you?"
+
+  // AI ROADMAP SETTINGS
+  isAiRoadmapEnabled?: boolean; // NEW: Enable/Disable Daily Goal Generator
   tierPermissions?: {
       FREE: string[];
       BASIC: string[];

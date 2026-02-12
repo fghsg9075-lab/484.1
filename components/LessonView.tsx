@@ -54,6 +54,9 @@ export const LessonView: React.FC<Props> = ({
   const [recLoading, setRecLoading] = useState(false);
   const [viewingNote, setViewingNote] = useState<any>(null); // New state for HTML Note Modal
 
+  const [batchIndex, setBatchIndex] = useState(0);
+  const BATCH_SIZE = 1;
+
   // LANGUAGE AUTO-SELECT
   useEffect(() => {
     if (user?.board === 'BSEB') {
@@ -505,9 +508,6 @@ export const LessonView: React.FC<Props> = ({
 
   // --- MCQ RENDERER ---
   if ((content.type === 'MCQ_ANALYSIS' || content.type === 'MCQ_SIMPLE') && content.mcqData) {
-      const BATCH_SIZE = 1; // UPDATE: Show 1 question at a time as requested
-      const [batchIndex, setBatchIndex] = useState(0);
-
       // --- INITIALIZATION & RESUME LOGIC ---
       useEffect(() => {
           if (!content.mcqData) return;

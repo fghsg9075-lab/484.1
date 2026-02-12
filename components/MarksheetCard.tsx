@@ -698,6 +698,8 @@ export const MarksheetCard: React.FC<Props> = ({ result, user, settings, onClose
                     const omrEntry = result.omrData?.find(d => d.qIndex === idx);
                     const userSelected = omrEntry ? omrEntry.selected : -1;
                     const correctAnswerIndex = q.correctAnswer;
+                    const timeSpent = omrEntry?.timeSpent || 0;
+                    const isRushed = timeSpent < 5; // Less than 5s is considered rushed
 
                     const isCorrect = userSelected === correctAnswerIndex;
                     const isSkipped = userSelected === -1;
@@ -715,7 +717,17 @@ export const MarksheetCard: React.FC<Props> = ({ result, user, settings, onClose
                                             className="text-sm font-bold text-slate-800 leading-snug prose prose-sm max-w-none"
                                             dangerouslySetInnerHTML={{ __html: renderMathInHtml(q.question) }}
                                         />
-                                        <SpeakButton text={fullText} className="shrink-0" />
+                                        <div className="flex flex-col items-end gap-1 shrink-0">
+                                            <SpeakButton text={fullText} />
+                                            {/* Time Badge */}
+                                            {omrEntry && (
+                                                <div className={`text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 ${isRushed ? 'bg-orange-100 text-orange-700 border border-orange-200' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
+                                                    <Clock size={10} />
+                                                    {timeSpent}s
+                                                    {isRushed && <span className="text-[8px] bg-orange-200 px-1 rounded ml-1">⚡</span>}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -815,9 +827,14 @@ export const MarksheetCard: React.FC<Props> = ({ result, user, settings, onClose
                         <p className="text-xl font-black text-red-700">{result.wrongCount}</p>
                         <p className="text-[10px] font-bold text-red-600 uppercase">Wrong</p>
                     </div>
-                    <div className="bg-blue-50 p-3 rounded-2xl border border-blue-100">
+                    <div className="bg-blue-50 p-3 rounded-2xl border border-blue-100 relative overflow-hidden">
                         <p className="text-xl font-black text-blue-700">{Math.round((result.totalTimeSeconds || 0) / 60)}m</p>
                         <p className="text-[10px] font-bold text-blue-600 uppercase">Time</p>
+                        {(result.averageTimePerQuestion < 5 && result.totalQuestions > 5) && (
+                             <div className="absolute top-0 right-0 bg-orange-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-bl-lg animate-pulse">
+                                 RUSHED
+                             </div>
+                        )}
                     </div>
                 </div>
             </div>

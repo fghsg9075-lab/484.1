@@ -76,9 +76,30 @@ The AI respects your subscription status:
   - You will lose access to previously unlocked Premium features unless renewed.
   - Your history remains safe, but you cannot open Premium items from it until you subscribe again.
 
+## 6. User Interface (How it looks)
+
+When Groq generates a roadmap, it appears prominently at the top of the **Student Dashboard**:
+
+### "Today's Goal" Card
+- **Visuals:** A distinctive card with a **Violet-to-Indigo Gradient** background (`bg-gradient-to-r from-violet-600 to-indigo-600`).
+- **Header:** Displays "Today's Goal" with a Compass icon.
+- **Motivation:** The AI-generated motivational quote appears in italic text right below the title.
+
+### Task List
+Inside the card, individual tasks are listed:
+- **Format:** Each task is a white semi-transparent box (`bg-white/10`).
+- **Icons:**
+  - 📘 **Book Icon:** For "READ" tasks (Notes).
+  - ☑️ **Checkbox Icon:** For "MCQ" tasks (Tests).
+- **Content:**
+  - **Title:** The specific chapter name to study.
+  - **Reason:** A small note explaining *why* this was chosen (e.g., "Weak Topic").
+- **Action:** A **Start** button that takes you directly to the relevant content (PDF or MCQ section).
+
 ## Summary for Users
 - **Does it scan data?** Yes, it reads test history and usage logs to personalize your experience.
 - **Does it know weak topics?** Yes, it calculates them based on scores < 50%.
 - **Can it make a plan?** Yes, it generates a daily "Today's Goal" plan based on your weak areas.
+- **How will I see it?** It appears as a colorful "Today's Goal" card at the top of your Home Screen with a list of tasks and a Start button.
 - **Does history monitoring work?** Yes, all major actions (Tests, Views) are recorded and visible in History.
 - **Does premium expire immediately?** Yes, the system checks every minute. Once expired, premium access is revoked instantly.

@@ -541,6 +541,12 @@ export interface SystemSettings {
       contentTypes: ('NOTES' | 'MCQ')[];
       requireApproval?: boolean; // NEW: Admin Approval Flow
   };
+
+  // VOICE COACH SETTINGS
+  greetingMessage?: string; // "Welcome back, {name}! Ready to learn?"
+  logoutMessage?: string; // "Remember your password? Login won't be possible without it."
+  guestWarningMessage?: string; // "Register to save your progress."
+  missedStudyMessage?: string; // "{name}, you haven't studied today! Where were you?"
   tierPermissions?: {
       FREE: string[];
       BASIC: string[];

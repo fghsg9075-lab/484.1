@@ -255,19 +255,24 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
           const msg = settings?.missedStudyMessage?.replace('{name}', user.name) || `${user.name}, aaj aapne padhai nahi ki hai, kahan the aap? 😏 Chaliye aaj ka goal set karte hain.`;
           showAlert(msg, 'INFO', `${greeting} ${user.name}`);
 
-          const synth = window.speechSynthesis;
-          if (synth && !synth.speaking) {
-               const u = new SpeechSynthesisUtterance(msg);
-               u.lang = 'hi-IN';
-               synth.speak(u);
+          if (settings?.isVoiceCoachEnabled !== false) {
+              const synth = window.speechSynthesis;
+              if (synth && !synth.speaking) {
+                   const u = new SpeechSynthesisUtterance(msg);
+                   u.lang = 'hi-IN';
+                   synth.speak(u);
+              }
           }
       } else if (holidayMsg) {
           // Holiday Greeting
           showAlert(holidayMsg, 'SUCCESS', `🎉 ${greeting}`);
-          const synth = window.speechSynthesis;
-          if (synth && !synth.speaking) {
-               const u = new SpeechSynthesisUtterance(`${greeting} ${user.name}. ${holidayMsg}`);
-               synth.speak(u);
+
+          if (settings?.isVoiceCoachEnabled !== false) {
+              const synth = window.speechSynthesis;
+              if (synth && !synth.speaking) {
+                   const u = new SpeechSynthesisUtterance(`${greeting} ${user.name}. ${holidayMsg}`);
+                   synth.speak(u);
+              }
           }
       } else {
           // Standard Greeting
@@ -2187,6 +2192,22 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                             <div className="bg-purple-100 text-purple-600 p-2 rounded-lg"><Megaphone size={20} /></div>
                             Request Content
                         </button>
+
+                        {/* UNIVERSAL VIDEO BUTTON (Admin Configured) */}
+                        {settings?.universalVideoConfig?.enabled && (
+                            <button
+                                onClick={() => {
+                                    if (settings.universalVideoConfig?.url) {
+                                        setActiveExternalApp(settings.universalVideoConfig.url);
+                                        setShowSidebar(false);
+                                    }
+                                }}
+                                className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700"
+                            >
+                                <div className="bg-rose-100 text-rose-600 p-2 rounded-lg"><Youtube size={20} /></div>
+                                {settings.universalVideoConfig.buttonLabel || "Watch Video"}
+                            </button>
+                        )}
 
                         {/* EXTERNAL APPS (Admin Configured) */}
                         {settings?.externalApps?.map(app => (

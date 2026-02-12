@@ -8883,12 +8883,90 @@ Capital of India?       Mumbai  Delhi   Kolkata Chennai 2       Delhi is the cap
                   </div>
               </div>
 
+              {/* UNIVERSAL VIDEO CONFIG */}
+              <div className="mb-8 p-4 bg-rose-50 rounded-xl border border-rose-100">
+                  <div className="flex justify-between items-center mb-4">
+                      <h4 className="font-bold text-lg text-rose-900 flex items-center gap-2">
+                          <Youtube size={20} /> Universal Video Button
+                      </h4>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                              type="checkbox"
+                              checked={localSettings.universalVideoConfig?.enabled || false}
+                              onChange={() => setLocalSettings({
+                                  ...localSettings,
+                                  universalVideoConfig: {
+                                      ...(localSettings.universalVideoConfig || { url: '', title: '', buttonLabel: '' }),
+                                      enabled: !(localSettings.universalVideoConfig?.enabled)
+                                  } as any
+                              })}
+                              className="w-5 h-5 accent-rose-600"
+                          />
+                          <span className="text-xs font-bold text-rose-700">Enable</span>
+                      </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                          <label className="text-xs font-bold text-rose-700 uppercase block mb-1">Button Label (Menu)</label>
+                          <input
+                              type="text"
+                              placeholder="e.g. Watch Live Class"
+                              value={localSettings.universalVideoConfig?.buttonLabel || ''}
+                              onChange={(e) => setLocalSettings({
+                                  ...localSettings,
+                                  universalVideoConfig: { ...(localSettings.universalVideoConfig || {}), buttonLabel: e.target.value } as any
+                              })}
+                              className="w-full p-2 border border-rose-200 rounded-lg text-sm"
+                          />
+                      </div>
+                      <div>
+                          <label className="text-xs font-bold text-rose-700 uppercase block mb-1">Video Title (Player)</label>
+                          <input
+                              type="text"
+                              placeholder="e.g. Special Announcement"
+                              value={localSettings.universalVideoConfig?.title || ''}
+                              onChange={(e) => setLocalSettings({
+                                  ...localSettings,
+                                  universalVideoConfig: { ...(localSettings.universalVideoConfig || {}), title: e.target.value } as any
+                              })}
+                              className="w-full p-2 border border-rose-200 rounded-lg text-sm"
+                          />
+                      </div>
+                      <div className="col-span-2">
+                          <label className="text-xs font-bold text-rose-700 uppercase block mb-1">Video URL (YouTube/MP4)</label>
+                          <input
+                              type="text"
+                              placeholder="https://youtu.be/..."
+                              value={localSettings.universalVideoConfig?.url || ''}
+                              onChange={(e) => setLocalSettings({
+                                  ...localSettings,
+                                  universalVideoConfig: { ...(localSettings.universalVideoConfig || {}), url: e.target.value } as any
+                              })}
+                              className="w-full p-2 border border-rose-200 rounded-lg text-sm text-blue-600 font-mono"
+                          />
+                      </div>
+                  </div>
+              </div>
+
               {/* VOICE COACH CUSTOM MESSAGES */}
               <div className="mb-8 p-4 bg-teal-50 rounded-xl border border-teal-100">
-                  <h4 className="font-bold text-lg mb-4 text-teal-900 flex items-center gap-2">
-                      <Headphones size={20} /> Voice Coach Customization
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex justify-between items-center mb-4">
+                      <h4 className="font-bold text-lg text-teal-900 flex items-center gap-2">
+                          <Headphones size={20} /> Voice Coach Customization
+                      </h4>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                              type="checkbox"
+                              checked={localSettings.isVoiceCoachEnabled !== false}
+                              onChange={() => toggleSetting('isVoiceCoachEnabled')}
+                              className="w-5 h-5 accent-teal-600"
+                          />
+                          <span className="text-xs font-bold text-teal-700">Enable Voice</span>
+                      </label>
+                  </div>
+
+                  <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-opacity ${localSettings.isVoiceCoachEnabled === false ? 'opacity-50 pointer-events-none' : ''}`}>
                       <div>
                           <label className="text-xs font-bold text-teal-700 uppercase block mb-1">Greeting Message</label>
                           <input

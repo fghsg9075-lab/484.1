@@ -1109,6 +1109,13 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                                     title: 'AI Personal Tutor',
                                     subtitle: 'Instant Doubt Solving',
                                     link: 'AI_CHAT'
+                                },
+                                {
+                                    id: 'blogger_hub',
+                                    image: 'https://img.freepik.com/free-vector/blogging-concept-illustration_114360-1038.jpg',
+                                    title: "What's Update",
+                                    subtitle: 'Blogger Hub',
+                                    link: 'CUSTOM_PAGE'
                                 }
                             ]}
                             interval={3000}
@@ -1152,6 +1159,61 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                           </div>
                       </button>
                   </div>
+
+                  {/* DISCOUNT BANNER (Waiting or Active) */}
+                  {showDiscountBanner && (
+                      <div className={`p-6 rounded-3xl relative overflow-hidden shadow-lg border-2 animate-in slide-in-from-bottom-4 transition-all ${
+                          discountStatus === 'WAITING'
+                              ? 'bg-slate-900 border-slate-800'
+                              : 'bg-gradient-to-r from-red-600 to-rose-600 border-red-500'
+                      }`}>
+                          {/* Background Glow */}
+                          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 blur-3xl rounded-full animate-pulse"></div>
+
+                          <div className="relative z-10 flex flex-col gap-4">
+                              <div className="flex items-start justify-between">
+                                  <div>
+                                      <div className="flex items-center gap-2 mb-2">
+                                          <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded shadow-sm ${
+                                              discountStatus === 'WAITING' ? 'bg-yellow-400 text-black animate-pulse' : 'bg-white text-red-600'
+                                          }`}>
+                                              {discountStatus === 'WAITING' ? 'COMING SOON' : 'LIVE NOW'}
+                                          </span>
+                                      </div>
+                                      <h3 className="text-xl font-black text-white leading-tight mb-1">
+                                          {discountStatus === 'WAITING'
+                                              ? "Big Discount Event"
+                                              : `${settings?.specialDiscountEvent?.discountPercent || 50}% OFF SALE`}
+                                      </h3>
+                                      <p className="text-xs text-white/80 font-medium max-w-[200px]">
+                                          {discountStatus === 'WAITING'
+                                              ? "Get ready for the biggest sale!"
+                                              : "Limited time offer on all premium plans."}
+                                      </p>
+                                  </div>
+
+                                  <div className="text-right bg-black/20 p-3 rounded-2xl backdrop-blur-sm border border-white/10 shrink-0">
+                                      <p className="text-[9px] font-bold text-white/60 uppercase mb-1 text-center">
+                                          {discountStatus === 'WAITING' ? 'Starts In' : 'Ends In'}
+                                      </p>
+                                      <div className="font-mono text-lg font-black text-white tracking-widest text-center tabular-nums">
+                                          {discountTimer || "00:00:00"}
+                                      </div>
+                                  </div>
+                              </div>
+
+                              {/* CTA Button (Only if Active) */}
+                              {discountStatus === 'ACTIVE' && (
+                                  <button
+                                      onClick={() => onTabChange('STORE')}
+                                      className="w-full bg-white text-red-600 text-sm font-black py-3 px-4 rounded-xl shadow-lg hover:bg-red-50 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                  >
+                                      <ShoppingBag size={18} /> CLAIM OFFER NOW
+                                  </button>
+                              )}
+                          </div>
+                      </div>
+                  )}
               </div>
           );
       }

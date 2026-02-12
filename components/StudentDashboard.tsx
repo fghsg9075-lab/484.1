@@ -1019,7 +1019,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                         </button>
 
                         <button
-                            onClick={() => { setMarksheetType('ANNUAL'); setShowMonthlyReport(true); }}
+                            onClick={() => onTabChange('ANALYTICS')}
                             className="bg-white border-2 border-slate-100 p-6 rounded-3xl shadow-sm flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all hover:border-blue-200 h-32"
                         >
                             <BarChart3 size={32} className="text-blue-600 mb-1" />

@@ -11,6 +11,7 @@ import { decodeHtml } from '../utils/htmlDecoder';
 import { storage } from '../utils/storage';
 import { getChapterData } from '../firebase';
 import { SpeakButton } from './SpeakButton';
+import { renderMathInHtml } from '../utils/mathUtils';
 
 interface Props {
   content: LessonContent | null;
@@ -836,7 +837,7 @@ export const LessonView: React.FC<Props> = ({
                                <div className="flex justify-between items-start mb-4 gap-3">
                                    <div className="font-bold text-slate-800 flex gap-3 leading-relaxed flex-1">
                                        <span className="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 font-bold mt-0.5">{idx + 1}</span>
-                                       <div dangerouslySetInnerHTML={{ __html: q.question }} className="prose prose-sm max-w-none" />
+                                       <div dangerouslySetInnerHTML={{ __html: renderMathInHtml(q.question) }} className="prose prose-sm max-w-none" />
                                    </div>
                                    <SpeakButton text={fullQuestionText} className="shrink-0" />
                                </div>
@@ -871,7 +872,7 @@ export const LessonView: React.FC<Props> = ({
                                                className={btnClass}
                                            >
                                                <span className="relative z-10 flex justify-between items-center w-full gap-2">
-                                                   <div dangerouslySetInnerHTML={{ __html: opt }} className="flex-1" />
+                                                   <div dangerouslySetInnerHTML={{ __html: renderMathInHtml(opt) }} className="flex-1" />
                                                    <div className="flex items-center gap-2 shrink-0">
                                                       {/* Removed Option SpeakButton */}
                                                       {showResults && analysisUnlocked && oIdx === q.correctAnswer && <CheckCircle size={16} className="text-green-600" />}
@@ -893,7 +894,7 @@ export const LessonView: React.FC<Props> = ({
                                        </div>
                                        <div
                                            className="text-slate-600 text-sm leading-relaxed prose prose-sm max-w-none"
-                                           dangerouslySetInnerHTML={{ __html: q.explanation }}
+                                           dangerouslySetInnerHTML={{ __html: renderMathInHtml(q.explanation) }}
                                        />
                                    </div>
                                )}

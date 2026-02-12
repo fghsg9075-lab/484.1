@@ -1061,7 +1061,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                   <div className="h-48 rounded-2xl overflow-hidden shadow-lg relative border-2 border-slate-900 mb-6">
                         <BannerCarousel
                             onBannerClick={(link) => {
-                                if (link === 'STORE' || link === 'CUSTOM_PAGE' || link === 'VIDEO' || link === 'PDF' || link === 'MCQ' || link === 'AUDIO') {
+                                if (['STORE', 'CUSTOM_PAGE', 'VIDEO', 'PDF', 'MCQ', 'AUDIO', 'AI_CHAT'].includes(link)) {
                                     onTabChange(link as any);
                                 } else if (link.startsWith('http')) {
                                     window.open(link, '_blank');
@@ -1069,29 +1069,47 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                             }}
                             slides={[
                                 {
-                                    id: 'premium_features',
-                                    image: 'https://img.freepik.com/free-vector/gradient-ui-ux-background_23-2149052117.jpg',
-                                    title: 'Unlock Premium',
-                                    subtitle: 'Notes, Tests, Videos & Audio',
+                                    id: 'premium_access',
+                                    image: 'https://img.freepik.com/free-vector/gradient-technological-background_23-2148884155.jpg',
+                                    title: 'Get Premium Access',
+                                    subtitle: 'Unlock All Features Now',
                                     link: 'STORE'
                                 },
                                 {
-                                    id: 'whats_new',
-                                    image: 'https://img.freepik.com/free-vector/flat-news-concept-background_23-2148194276.jpg',
-                                    title: "What's New?",
-                                    subtitle: 'Latest Updates & Features',
-                                    link: 'CUSTOM_PAGE'
+                                    id: 'premium_pdf',
+                                    image: 'https://img.freepik.com/free-vector/online-document-concept-illustration_114360-5453.jpg',
+                                    title: 'Premium PDFs',
+                                    subtitle: 'High Quality Notes Library',
+                                    link: 'PDF'
                                 },
-                                ...(showDiscountBanner ? [{
-                                    id: 'discount',
-                                    image: 'https://img.freepik.com/free-vector/gradient-sale-background_23-2148934477.jpg',
-                                    title: 'Special Offer',
-                                    subtitle: `${settings?.specialDiscountEvent?.discountPercent || 50}% OFF Ends Soon!`,
-                                    link: 'STORE'
-                                }] : []),
-                                ...(settings?.exploreBanners?.filter(b => b.isActive).map(b => ({
-                                    id: b.id, image: b.imageUrl, link: b.actionUrl
-                                })) || [])
+                                {
+                                    id: 'premium_mcq',
+                                    image: 'https://img.freepik.com/free-vector/checklist-concept-illustration_114360-479.jpg',
+                                    title: 'Premium MCQ Tests',
+                                    subtitle: 'Practice & Master Topics',
+                                    link: 'MCQ'
+                                },
+                                {
+                                    id: 'premium_video',
+                                    image: 'https://img.freepik.com/free-vector/online-tutorials-concept_52683-37480.jpg',
+                                    title: 'Premium Video Lectures',
+                                    subtitle: 'Learn from Experts',
+                                    link: 'VIDEO'
+                                },
+                                {
+                                    id: 'premium_audio',
+                                    image: 'https://img.freepik.com/free-vector/podcast-concept-illustration_114360-1068.jpg',
+                                    title: 'Premium Audiobooks',
+                                    subtitle: 'Listen & Learn Anywhere',
+                                    link: 'AUDIO'
+                                },
+                                {
+                                    id: 'ai_tutor',
+                                    image: 'https://img.freepik.com/free-vector/chat-bot-concept-illustration_114360-5522.jpg',
+                                    title: 'AI Personal Tutor',
+                                    subtitle: 'Instant Doubt Solving',
+                                    link: 'AI_CHAT'
+                                }
                             ]}
                             interval={3000}
                             autoPlay={true}

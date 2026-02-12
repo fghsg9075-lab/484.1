@@ -294,25 +294,47 @@ export const Store: React.FC<Props> = ({ user, settings }) => {
               <p className="text-slate-400 text-sm font-medium">Unlock your full potential today</p>
               
               {showEventBanner && timeLeft && (
-                  <div className={`mt-4 bg-gradient-to-r border p-4 rounded-xl relative overflow-hidden ${activeEvent ? 'from-amber-900/40 to-orange-900/40 border-amber-500/30' : 'from-slate-900/40 to-slate-800/40 border-slate-500/30'}`}>
-                      <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r animate-[shimmer_2s_infinite] ${activeEvent ? 'from-amber-500 to-orange-500' : 'from-slate-500 to-slate-400'}`}></div>
+                  <div className={`mt-6 p-6 rounded-3xl relative overflow-hidden shadow-2xl border-2 animate-in zoom-in duration-300 ${
+                      activeEvent
+                          ? 'bg-gradient-to-r from-red-600 to-rose-600 border-red-500'
+                          : 'bg-slate-900 border-slate-800'
+                  }`}>
+                      {/* Background Glow & Effects */}
+                      <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 blur-3xl rounded-full animate-pulse"></div>
+                      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
                       
-                      <div className="flex justify-between items-center mb-2">
-                          <div>
-                              <p className={`font-black text-lg uppercase tracking-wider flex items-center gap-2 ${activeEvent ? 'text-amber-400' : 'text-slate-400'}`}>
-                                  {activeEvent ? '🔥' : '⏳'} {event?.eventName} {activeEvent ? '' : '(Starts Soon)'}
-                              </p>
-                              <p className={`${activeEvent ? 'text-amber-200' : 'text-slate-300'} text-xs font-bold`}>
-                                  {activeEvent ? `Limited Time Offer: ${isSubscribed ? (event?.renewalDiscountPercent || event?.discountPercent) : event?.discountPercent}% OFF` : `Stay Tuned! Big Discount Coming.`}
-                              </p>
-                          </div>
-                          <div className="text-right">
-                              <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${activeEvent ? 'text-amber-500' : 'text-slate-500'}`}>{activeEvent ? 'Ends In' : 'Starts In'}</p>
-                              <div className="flex gap-2 font-mono text-white font-bold text-lg">
-                                  {timeLeft.days > 0 && <span>{timeLeft.days}d</span>}
-                                  <span>{String(timeLeft.hours).padStart(2, '0')}:</span>
-                                  <span>{String(timeLeft.minutes).padStart(2, '0')}:</span>
-                                  <span>{String(timeLeft.seconds).padStart(2, '0')}</span>
+                      <div className="relative z-10 flex flex-col gap-4">
+                          <div className="flex items-start justify-between">
+                              <div className="text-left">
+                                  <div className="flex items-center gap-2 mb-2">
+                                      <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded shadow-sm ${
+                                          !activeEvent ? 'bg-yellow-400 text-black animate-pulse' : 'bg-white text-red-600'
+                                      }`}>
+                                          {!activeEvent ? 'COMING SOON' : 'LIVE NOW'}
+                                      </span>
+                                  </div>
+                                  <h3 className="text-2xl font-black text-white leading-tight mb-1 drop-shadow-md">
+                                      {!activeEvent
+                                          ? "Big Discount Event"
+                                          : `${event?.discountPercent}% OFF SALE`}
+                                  </h3>
+                                  <p className="text-xs text-white/90 font-medium max-w-[200px]">
+                                      {!activeEvent
+                                          ? "Get ready for the biggest sale!"
+                                          : `Limited time offer on all premium plans.${isSubscribed ? ' (+5% Bonus for You!)' : ''}`}
+                                  </p>
+                              </div>
+
+                              <div className="text-right bg-black/30 p-3 rounded-2xl backdrop-blur-md border border-white/20 shrink-0 shadow-lg">
+                                  <p className="text-[9px] font-bold text-white/80 uppercase mb-1 text-center tracking-widest">
+                                      {!activeEvent ? 'Starts In' : 'Ends In'}
+                                  </p>
+                                  <div className="font-mono text-xl font-black text-white tracking-widest text-center tabular-nums drop-shadow-sm">
+                                      {timeLeft.days > 0 && <span>{timeLeft.days}d </span>}
+                                      <span>{String(timeLeft.hours).padStart(2, '0')}:</span>
+                                      <span>{String(timeLeft.minutes).padStart(2, '0')}:</span>
+                                      <span>{String(timeLeft.seconds).padStart(2, '0')}</span>
+                                  </div>
                               </div>
                           </div>
                       </div>

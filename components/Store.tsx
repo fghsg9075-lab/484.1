@@ -415,10 +415,8 @@ export const Store: React.FC<Props> = ({ user, settings }) => {
                   }
 
                   const isYearly = plan.name.includes('Yearly');
-                  // Re-calculate discount percent based on FINAL price vs ORIGINAL
-                  const discountPercent = original > price ? Math.round(((original - price) / original) * 100) : 0;
 
-                  // Check if renewal bonus is active for this user
+                  // Check if renewal bonus is active for this user (Used for UI Badge only)
                   const hasRenewalBonus = user.isPremium || (user.subscriptionHistory && user.subscriptionHistory.length > 0);
 
                   return (
@@ -442,10 +440,17 @@ export const Store: React.FC<Props> = ({ user, settings }) => {
                               <span className={`font-bold text-sm ${isSelected ? 'text-cyan-400' : 'text-slate-200'}`}>
                                   {plan.name}
                               </span>
-                              {discountPercent > 0 && (
-                                  <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-bold">
-                                      {discountPercent}% OFF {hasRenewalBonus && '(+5% Bonus)'}
-                                  </span>
+                              {discountPercentVal > 0 && (
+                                  <div className="flex flex-col items-end">
+                                      <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-bold">
+                                          {discountPercentVal}% OFF
+                                      </span>
+                                      {hasRenewalBonus && discountPercentVal >= 5 && (
+                                          <span className="text-[8px] text-green-400 font-bold mt-0.5">
+                                              (+5% Premium Bonus)
+                                          </span>
+                                      )}
+                                  </div>
                               )}
                           </div>
 

@@ -952,16 +952,29 @@ const App: React.FC = () => {
   };
 
   const handleClassSelect = (level: ClassLevel) => {
+      // 1. Update Profile FIRST (Persist to Cloud/Local)
       updateUserProfile({ classLevel: level });
-      if (level === '11' || level === '12') {
-          setState(prev => ({ ...prev, selectedClass: level, view: 'STREAMS' }));
-      } else if (level === 'COMPETITION') {
-          updateUserProfile({ stream: null });
-          setState(prev => ({ ...prev, selectedClass: level, selectedStream: null, view: 'SUBJECTS' }));
-      } else {
-          updateUserProfile({ stream: null });
-          setState(prev => ({ ...prev, selectedClass: level, selectedStream: null, view: 'SUBJECTS' }));
-      }
+
+      // 2. Update Local State (Immediate UI Feedback without reload)
+      // We must update 'user' in state to match the persistence, otherwise child components might get stale props
+      setState(prev => {
+          const updatedUser = prev.user ? { ...prev.user, classLevel: level } : null;
+
+          if (level === '11' || level === '12') {
+              return { ...prev, user: updatedUser, selectedClass: level, view: 'STREAMS' };
+          }
+
+          // For non-stream classes, we also clear stream
+          const finalUser = updatedUser ? { ...updatedUser, stream: undefined } : null; // Use undefined instead of null to match type if optional
+
+          if (level === 'COMPETITION') {
+               updateUserProfile({ stream: null }); // Ensure DB is cleared too
+               return { ...prev, user: finalUser as any, selectedClass: level, selectedStream: null, view: 'SUBJECTS' };
+          } else {
+               updateUserProfile({ stream: null });
+               return { ...prev, user: finalUser as any, selectedClass: level, selectedStream: null, view: 'SUBJECTS' };
+          }
+      });
   };
 
   const handleStreamSelect = (stream: Stream) => {

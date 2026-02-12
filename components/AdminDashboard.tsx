@@ -2677,8 +2677,6 @@ const AdminDashboardInner: React.FC<Props> = ({ onNavigate, settings, onUpdateSe
                           <DashboardCard icon={Rocket} label="Challenge 2.0" onClick={() => setActiveTab('CHALLENGE_CREATOR_20')} color="violet" />
                           <DashboardCard icon={Video} label="Universal Playlist" onClick={() => setActiveTab('UNIVERSAL_PLAYLIST')} color="rose" />
                           <DashboardCard icon={ShoppingBag} label="💰 Pricing" onClick={() => setActiveTab('PRICING_MGMT')} color="yellow" />
-                          <DashboardCard icon={Image} label="Explore Banners" onClick={() => setActiveTab('EXPLORE_BANNERS')} color="blue" />
-                          <DashboardCard icon={Layout} label="Feature Control" onClick={() => setActiveTab('FEATURE_CONTROL')} color="purple" />
                       </>
                   )}
                   
@@ -9255,101 +9253,6 @@ Capital of India?       Mumbai  Delhi   Kolkata Chennai 2       Delhi is the cap
           </div>
       )}
 
-      {/* --- EXPLORE BANNERS MANAGER --- */}
-      {activeTab === 'EXPLORE_BANNERS' && (
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 animate-in slide-in-from-right">
-              <div className="flex items-center gap-4 mb-6 border-b pb-4">
-                  <button onClick={() => setActiveTab('DASHBOARD')} className="bg-slate-100 p-2 rounded-full hover:bg-slate-200"><ArrowLeft size={20} /></button>
-                  <h3 className="text-xl font-black text-slate-800">Explore Page Banners</h3>
-              </div>
-
-              <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 mb-8">
-                  <h4 className="font-bold text-slate-800 mb-4">Add New Banner</h4>
-                  <div className="flex gap-4">
-                      <input
-                          type="text"
-                          id="new-banner-img"
-                          placeholder="Image URL"
-                          className="flex-1 p-3 rounded-xl border border-slate-200"
-                      />
-                      <input
-                          type="text"
-                          id="new-banner-link"
-                          placeholder="Action Link (Optional)"
-                          className="flex-1 p-3 rounded-xl border border-slate-200"
-                      />
-                      <button
-                          onClick={() => {
-                              const img = (document.getElementById('new-banner-img') as HTMLInputElement).value;
-                              const link = (document.getElementById('new-banner-link') as HTMLInputElement).value;
-                              if (!img) return alert("Image URL is required");
-
-                              const newBanner = {
-                                  id: Date.now().toString(),
-                                  imageUrl: img,
-                                  actionUrl: link,
-                                  isActive: true
-                              };
-
-                              setLocalSettings({
-                                  ...localSettings,
-                                  exploreBanners: [...(localSettings.exploreBanners || []), newBanner]
-                              });
-
-                              (document.getElementById('new-banner-img') as HTMLInputElement).value = '';
-                              (document.getElementById('new-banner-link') as HTMLInputElement).value = '';
-                          }}
-                          className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700"
-                      >
-                          Add Banner
-                      </button>
-                  </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(localSettings.exploreBanners || []).map((banner, idx) => (
-                      <div key={banner.id} className="bg-white border rounded-2xl overflow-hidden shadow-sm relative group">
-                          <img src={banner.imageUrl} alt="Banner" className="w-full h-32 object-cover" />
-                          <div className="p-3 flex items-center justify-between bg-white">
-                              <span className={`text-xs font-bold px-2 py-1 rounded ${banner.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                  {banner.isActive ? 'ACTIVE' : 'HIDDEN'}
-                              </span>
-                              <div className="flex gap-2">
-                                  <button
-                                      onClick={() => {
-                                          const updated = [...(localSettings.exploreBanners || [])];
-                                          updated[idx].isActive = !updated[idx].isActive;
-                                          setLocalSettings({...localSettings, exploreBanners: updated});
-                                      }}
-                                      className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200 text-slate-600"
-                                      title={banner.isActive ? "Hide" : "Show"}
-                                  >
-                                      {banner.isActive ? <EyeOff size={16} /> : <Eye size={16} />}
-                                  </button>
-                                  <button
-                                      onClick={() => {
-                                          if(!confirm("Delete this banner?")) return;
-                                          const updated = localSettings.exploreBanners!.filter((_, i) => i !== idx);
-                                          setLocalSettings({...localSettings, exploreBanners: updated});
-                                      }}
-                                      className="p-2 bg-red-50 rounded-lg hover:bg-red-100 text-red-600"
-                                      title="Delete"
-                                  >
-                                      <Trash2 size={16} />
-                                  </button>
-                              </div>
-                          </div>
-                      </div>
-                  ))}
-              </div>
-
-              <div className="mt-8 flex justify-end">
-                  <button onClick={handleSaveSettings} className="bg-green-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-green-700 flex items-center gap-2">
-                      <Save size={20} /> Save All Changes
-                  </button>
-              </div>
-          </div>
-      )}
 
     </div>
   );

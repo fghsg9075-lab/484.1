@@ -1982,6 +1982,19 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                             <div className="bg-yellow-100 text-yellow-600 p-2 rounded-lg"><Trophy size={20} /></div>
                             Prizes
                         </button>
+                        {/* RESTORED: Request Content */}
+                        <button onClick={() => { setShowRequestModal(true); setShowSidebar(false); }} className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700">
+                            <div className="bg-purple-100 text-purple-600 p-2 rounded-lg"><Megaphone size={20} /></div>
+                            Request Content
+                        </button>
+                        {/* NEW: What's New / Blogger Hub */}
+                        <button onClick={() => { onTabChange('CUSTOM_PAGE'); setShowSidebar(false); }} className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700 relative">
+                            <div className="bg-teal-100 text-teal-600 p-2 rounded-lg"><Zap size={20} /></div>
+                            What's New
+                            {hasNewUpdate && (
+                                <span className="absolute top-4 right-4 w-3 h-3 bg-red-500 rounded-full animate-pulse border-2 border-white"></span>
+                            )}
+                        </button>
                     </div>
 
                     <div className="p-4 border-t border-slate-100">
@@ -1997,6 +2010,19 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                     </div>
                 </div>
             </div>
+        )}
+
+        {/* NOTIFICATIONS FLOAT BUTTON (New Requirement) */}
+        {activeTab === 'HOME' && (
+            <button
+                onClick={() => onTabChange('UPDATES')}
+                className="fixed top-24 right-4 z-40 bg-white p-3 rounded-full shadow-lg border border-slate-200 text-slate-600 hover:text-blue-600 hover:scale-110 transition-all active:scale-95"
+            >
+                <Bell size={20} />
+                {hasNewUpdate && (
+                    <span className="absolute top-0 right-0 w-3 h-3 bg-red-600 rounded-full border-2 border-white animate-pulse"></span>
+                )}
+            </button>
         )}
 
         <StudentAiAssistant 

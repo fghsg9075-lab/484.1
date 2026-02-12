@@ -57,6 +57,7 @@ export const LessonView: React.FC<Props> = ({
   const [showQuestionDrawer, setShowQuestionDrawer] = useState(false);
   const [batchIndex, setBatchIndex] = useState(0);
   const [autoReadEnabled, setAutoReadEnabled] = useState(true);
+  const [showVoiceControls, setShowVoiceControls] = useState(false);
   const BATCH_SIZE = 1;
 
   // LANGUAGE AUTO-SELECT
@@ -913,17 +914,55 @@ export const LessonView: React.FC<Props> = ({
                        )}
                    </div>
                    <div className="flex items-center gap-3">
-                       {/* Auto Read Toggle */}
-                       <button
-                           onClick={() => {
-                               const newState = !autoReadEnabled;
-                               setAutoReadEnabled(newState);
-                               if (!newState) window.speechSynthesis.cancel();
-                           }}
-                           className={`p-2 rounded-lg transition-all ${autoReadEnabled ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}
-                       >
-                           {autoReadEnabled ? <Volume2 size={18} /> : <Volume2 size={18} className="opacity-50" />}
-                       </button>
+                       {/* Auto Read Toggle & Speed Control */}
+                       <div className="relative">
+                           <button
+                               onClick={() => setShowVoiceControls(!showVoiceControls)}
+                               className={`p-2 rounded-lg transition-all flex items-center gap-1 ${autoReadEnabled ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}
+                           >
+                               {autoReadEnabled ? <Volume2 size={18} /> : <Volume2 size={18} className="opacity-50" />}
+                               <span className="text-[10px] font-bold">{speechRate}x</span>
+                           </button>
+
+                           {showVoiceControls && (
+                               <div className="absolute top-10 right-0 bg-white p-3 rounded-xl shadow-xl border border-slate-200 z-[60] w-48 animate-in fade-in slide-in-from-top-2">
+                                   <div className="flex justify-between items-center mb-2">
+                                       <span className="text-xs font-bold text-slate-500">Auto Read</span>
+                                       <button
+                                           onClick={() => {
+                                               const newState = !autoReadEnabled;
+                                               setAutoReadEnabled(newState);
+                                               if (!newState) window.speechSynthesis.cancel();
+                                           }}
+                                           className={`w-8 h-4 rounded-full transition-colors relative ${autoReadEnabled ? 'bg-green-500' : 'bg-slate-300'}`}
+                                       >
+                                           <div className={`w-3 h-3 bg-white rounded-full absolute top-0.5 transition-all ${autoReadEnabled ? 'left-4.5' : 'left-0.5'}`}></div>
+                                       </button>
+                                   </div>
+                                   <div className="space-y-1">
+                                       <span className="text-xs font-bold text-slate-500">Speed: {speechRate}x</span>
+                                       <input
+                                           type="range"
+                                           min="0.75"
+                                           max="1.5"
+                                           step="0.25"
+                                           value={speechRate}
+                                           onChange={(e) => {
+                                               setSpeechRate(parseFloat(e.target.value));
+                                               window.speechSynthesis.cancel(); // Reset current speech
+                                           }}
+                                           className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                                       />
+                                       <div className="flex justify-between text-[8px] text-slate-400 font-mono">
+                                           <span>0.75x</span>
+                                           <span>1x</span>
+                                           <span>1.25x</span>
+                                           <span>1.5x</span>
+                                       </div>
+                                   </div>
+                               </div>
+                           )}
+                       </div>
 
                        {/* Timer Display - Prominent */}
                        <div className="flex items-center gap-2 bg-slate-900 text-white px-3 py-1.5 rounded-lg font-mono font-bold text-sm shadow-md">

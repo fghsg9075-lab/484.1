@@ -849,7 +849,7 @@ const App: React.FC = () => {
     if (!state.originalAdmin) {
         localStorage.setItem('nst_current_user', JSON.stringify(user));
     }
-    saveUserToLive(user); // छात्र का डेटा क्लाउड पर भेजें
+    if (!user.isGuest) saveUserToLive(user); // छात्र का डेटा क्लाउड पर भेजें
     localStorage.setItem('nst_has_seen_welcome', 'true');
     setState(prev => ({ 
       ...prev, 

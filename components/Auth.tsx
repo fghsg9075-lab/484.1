@@ -564,6 +564,34 @@ export const Auth: React.FC<Props> = ({ onLogin, logActivity }) => {
 
         {view === 'LOGIN' && (
             <div className="mt-6 text-center">
+                <button
+                    onClick={() => {
+                        const guestUser: User = {
+                            id: `guest-${Date.now()}`,
+                            displayId: 'GUEST',
+                            name: 'Guest User',
+                            mobile: '',
+                            email: '',
+                            password: '',
+                            role: 'STUDENT',
+                            createdAt: new Date().toISOString(),
+                            credits: 10,
+                            streak: 0,
+                            lastLoginDate: new Date().toISOString(),
+                            board: 'CBSE',
+                            classLevel: '10',
+                            isGuest: true,
+                            isPremium: false,
+                            redeemedCodes: [],
+                            progress: {}
+                        };
+                        onLogin(guestUser);
+                    }}
+                    className="w-full bg-slate-100 text-slate-600 font-bold py-3.5 rounded-xl mb-4 hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
+                >
+                    <UserIcon size={18} /> Continue as Guest
+                </button>
+
                 <button onClick={() => setView('RECOVERY')} className="text-xs text-orange-500 font-bold hover:underline bg-orange-50 px-4 py-2 rounded-full border border-orange-100">
                     Request Login without Password
                 </button>

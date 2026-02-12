@@ -8870,6 +8870,56 @@ Capital of India?       Mumbai  Delhi   Kolkata Chennai 2       Delhi is the cap
                   </div>
               </div>
 
+              {/* VOICE COACH CUSTOM MESSAGES */}
+              <div className="mb-8 p-4 bg-teal-50 rounded-xl border border-teal-100">
+                  <h4 className="font-bold text-lg mb-4 text-teal-900 flex items-center gap-2">
+                      <Headphones size={20} /> Voice Coach Customization
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                          <label className="text-xs font-bold text-teal-700 uppercase block mb-1">Greeting Message</label>
+                          <input
+                              type="text"
+                              placeholder="Welcome back, {name}! Ready to learn?"
+                              value={localSettings.greetingMessage || ''}
+                              onChange={(e) => setLocalSettings({...localSettings, greetingMessage: e.target.value})}
+                              className="w-full p-2 border border-teal-200 rounded-lg text-sm"
+                          />
+                          <p className="text-[9px] text-teal-600 mt-1">Use <code>{`{name}`}</code> for user name.</p>
+                      </div>
+                      <div>
+                          <label className="text-xs font-bold text-teal-700 uppercase block mb-1">Missed Study Warning</label>
+                          <input
+                              type="text"
+                              placeholder="{name}, you haven't studied today! Where were you?"
+                              value={localSettings.missedStudyMessage || ''}
+                              onChange={(e) => setLocalSettings({...localSettings, missedStudyMessage: e.target.value})}
+                              className="w-full p-2 border border-teal-200 rounded-lg text-sm"
+                          />
+                      </div>
+                      <div>
+                          <label className="text-xs font-bold text-teal-700 uppercase block mb-1">Logout Warning</label>
+                          <input
+                              type="text"
+                              placeholder="Remember your password? Login won't be possible without it."
+                              value={localSettings.logoutMessage || ''}
+                              onChange={(e) => setLocalSettings({...localSettings, logoutMessage: e.target.value})}
+                              className="w-full p-2 border border-teal-200 rounded-lg text-sm"
+                          />
+                      </div>
+                      <div>
+                          <label className="text-xs font-bold text-teal-700 uppercase block mb-1">Guest Mode Warning</label>
+                          <input
+                              type="text"
+                              placeholder="Register to save your progress."
+                              value={localSettings.guestWarningMessage || ''}
+                              onChange={(e) => setLocalSettings({...localSettings, guestWarningMessage: e.target.value})}
+                              className="w-full p-2 border border-teal-200 rounded-lg text-sm"
+                          />
+                      </div>
+                  </div>
+              </div>
+
               {/* CREDIT PACKAGES */}
               <div>
                   <h4 className="font-bold text-lg mb-4 text-slate-800">Credit Packages</h4>

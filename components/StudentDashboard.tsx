@@ -8,10 +8,11 @@ import { getSubjectsList, DEFAULT_APP_FEATURES, ALL_APP_FEATURES } from '../cons
 import { getActiveChallenges } from '../services/questionBank';
 import { generateDailyChallengeQuestions } from '../utils/challengeGenerator';
 import { generateMorningInsight } from '../services/morningInsight';
+import { getHolidayGreeting } from '../utils/holidayGreetings';
 import { RedeemSection } from './RedeemSection';
 import { PrizeList } from './PrizeList';
 import { Store } from './Store';
-import { Layout, Gift, Sparkles, Megaphone, Lock, BookOpen, AlertCircle, Edit, Settings, Play, Pause, RotateCcw, MessageCircle, Gamepad2, Timer, CreditCard, Send, CheckCircle, Mail, X, Ban, Smartphone, Trophy, ShoppingBag, ArrowRight, Video, Youtube, Home, User as UserIcon, Book, BookOpenText, List, BarChart3, Award, Bell, Headphones, LifeBuoy, WifiOff, Zap, Star, Crown, History, ListChecks, Rocket, Ticket, TrendingUp, BrainCircuit, FileText, CheckSquare, Menu, LayoutGrid, Compass, User as UserIconOutline, MessageSquare, Bot, LogOut } from 'lucide-react';
+import { Layout, Gift, Sparkles, Megaphone, Lock, BookOpen, AlertCircle, Edit, Settings, Play, Pause, RotateCcw, MessageCircle, Gamepad2, Timer, CreditCard, Send, CheckCircle, Mail, X, Ban, Smartphone, Trophy, ShoppingBag, ArrowRight, Video, Youtube, Home, User as UserIcon, Book, BookOpenText, List, BarChart3, Award, Bell, Headphones, LifeBuoy, WifiOff, Zap, Star, Crown, History, ListChecks, Rocket, Ticket, TrendingUp, BrainCircuit, FileText, CheckSquare, Menu, LayoutGrid, Compass, User as UserIconOutline, MessageSquare, Bot, LogOut, KeyRound } from 'lucide-react';
 import { SubjectSelection } from './SubjectSelection';
 import { BannerCarousel } from './BannerCarousel';
 import { ChapterSelection } from './ChapterSelection'; // Imported for Video Flow
@@ -225,23 +226,33 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
       else if (hour < 18) greeting = "Good Afternoon";
       else greeting = "Good Evening";
 
-      // Check Study Time
+      // CHECK HOLIDAY (Priority 1)
+      const holidayMsg = getHolidayGreeting(new Date());
+
+      // CHECK STUDY (Priority 2)
       // If user opens app late (e.g., after 6 PM) and study seconds < 30 mins
       if (hour >= 18 && dailyStudySeconds < 1800) {
-          const msg = `${user.name}, aaj aapne padhai nahi ki hai, kahan the aap? 😏 Chaliye aaj ka goal set karte hain.`;
+          const msg = settings?.missedStudyMessage?.replace('{name}', user.name) || `${user.name}, aaj aapne padhai nahi ki hai, kahan the aap? 😏 Chaliye aaj ka goal set karte hain.`;
           showAlert(msg, 'INFO', `${greeting} ${user.name}`);
 
-          // Auto-Speak if enabled (Assuming Voice Coach default is ON for now or we add a setting)
-          // We can use a simple check or new setting.
           const synth = window.speechSynthesis;
           if (synth && !synth.speaking) {
                const u = new SpeechSynthesisUtterance(msg);
-               u.lang = 'hi-IN'; // Hindi tone requested
+               u.lang = 'hi-IN';
+               synth.speak(u);
+          }
+      } else if (holidayMsg) {
+          // Holiday Greeting
+          showAlert(holidayMsg, 'SUCCESS', `🎉 ${greeting}`);
+          const synth = window.speechSynthesis;
+          if (synth && !synth.speaking) {
+               const u = new SpeechSynthesisUtterance(`${greeting} ${user.name}. ${holidayMsg}`);
                synth.speak(u);
           }
       } else {
           // Standard Greeting
-          showAlert(`Welcome back, ${user.name}! Ready to learn?`, 'SUCCESS', greeting);
+          const msg = settings?.greetingMessage?.replace('{name}', user.name) || `Welcome back, ${user.name}! Ready to learn?`;
+          showAlert(msg, 'SUCCESS', greeting);
       }
 
       localStorage.setItem(shownKey, 'true');
@@ -1849,7 +1860,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                     </div>
                     <h2 className="text-2xl font-black text-slate-800 mb-2">Password Check!</h2>
                     <p className="text-slate-600 font-medium mb-6">
-                        Aap ko yaad hai password? Agar yaad nahi hai to password change kijiye warna login nahi kar payenge.
+                        {settings?.logoutMessage || "Aap ko yaad hai password? Agar yaad nahi hai to password change kijiye warna login nahi kar payenge."}
                     </p>
 
                     {logoutTimer > 0 && (
@@ -2016,7 +2027,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                     <AlertCircle size={24} className="text-white shrink-0" />
                     <div>
                         <p className="font-bold text-sm">Guest Mode Active</p>
-                        <p className="text-xs text-white/90">Apne account ko mobile/email se register kijiye warna ye account kho sakta hai.</p>
+                        <p className="text-xs text-white/90">{settings?.guestWarningMessage || "Apne account ko mobile/email se register kijiye warna ye account kho sakta hai."}</p>
                     </div>
                 </div>
                 <button

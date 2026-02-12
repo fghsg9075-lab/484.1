@@ -932,17 +932,43 @@ const App: React.FC = () => {
       setState(prev => ({ ...prev, user: prev.originalAdmin, originalAdmin: null, view: 'ADMIN_DASHBOARD', selectedBoard: null, selectedClass: null }));
   };
 
-  const handleBoardSelect = (board: Board) => { setState(prev => ({ ...prev, selectedBoard: board, view: 'CLASSES', language: board === 'BSEB' ? 'Hindi' : 'English' })); };
+  const updateUserProfile = (updates: Partial<User>) => {
+      if (!state.user) return;
+      const updatedUser = { ...state.user, ...updates };
+
+      // Update State
+      setState(prev => ({ ...prev, user: updatedUser }));
+
+      // Persist (Only if not impersonating)
+      if (!state.originalAdmin) {
+          localStorage.setItem('nst_current_user', JSON.stringify(updatedUser));
+          saveUserToLive(updatedUser);
+      }
+  };
+
+  const handleBoardSelect = (board: Board) => {
+      updateUserProfile({ board });
+      setState(prev => ({ ...prev, selectedBoard: board, view: 'CLASSES', language: board === 'BSEB' ? 'Hindi' : 'English' }));
+  };
+
   const handleClassSelect = (level: ClassLevel) => {
+      updateUserProfile({ classLevel: level });
       if (level === '11' || level === '12') {
           setState(prev => ({ ...prev, selectedClass: level, view: 'STREAMS' }));
       } else if (level === 'COMPETITION') {
+          updateUserProfile({ stream: null });
           setState(prev => ({ ...prev, selectedClass: level, selectedStream: null, view: 'SUBJECTS' }));
       } else {
+          updateUserProfile({ stream: null });
           setState(prev => ({ ...prev, selectedClass: level, selectedStream: null, view: 'SUBJECTS' }));
       }
   };
-  const handleStreamSelect = (stream: Stream) => { setState(prev => ({ ...prev, selectedStream: stream, view: 'SUBJECTS' })); };
+
+  const handleStreamSelect = (stream: Stream) => {
+      updateUserProfile({ stream });
+      setState(prev => ({ ...prev, selectedStream: stream, view: 'SUBJECTS' }));
+  };
+
   const handleSubjectSelect = async (subject: Subject) => {
     setState(prev => ({ ...prev, selectedSubject: subject, loading: true }));
     try {
@@ -1230,6 +1256,28 @@ const App: React.FC = () => {
          if(onlineContent.price !== undefined) cost = onlineContent.price;
     }
 
+    // --- EMPTY CONTENT GUARD ---
+    // If online content is found but the URL/Content is empty string, force coming soon.
+    if (onlineContent && !onlineContent.content && !onlineContent.videoPlaylist?.length && !onlineContent.aiHtmlContent) {
+        setState(prev => ({
+            ...prev,
+            selectedChapter: tempSelectedChapter,
+            lessonContent: {
+                id: Date.now().toString(),
+                title: tempSelectedChapter.title,
+                subtitle: "Content Unavailable",
+                content: "",
+                type: type,
+                dateCreated: new Date().toISOString(),
+                subjectName: state.selectedSubject?.name || '',
+                isComingSoon: true
+            },
+            view: 'LESSON'
+        }));
+        setIsFullScreen(true);
+        return;
+    }
+
     // --- ACCESS CONTROL LOGIC (Unified) ---
     let hasAccess = false;
     
@@ -1334,8 +1382,36 @@ const App: React.FC = () => {
         // Try to use online content if available
         if (onlineContent) {
             const restoredContent = { ...onlineContent, userAnswers: restoredAnswers };
+            // Double check for content existence before setting state
+            if (!restoredContent.content && !restoredContent.videoPlaylist?.length && !restoredContent.aiHtmlContent && type !== 'MCQ_ANALYSIS' && type !== 'MCQ_SIMPLE') {
+                 // Fallback to Coming Soon if somehow slipped through
+                 restoredContent.isComingSoon = true;
+            }
             setState(prev => ({ ...prev, lessonContent: restoredContent }));
             setGenerationDataReady(true);
+            return;
+        }
+
+        // If no online content found and it's a generated type (e.g. NOTES_SIMPLE), we might generate it.
+        // But if it's a strict type like PDF or VIDEO and not found in Admin, it's Coming Soon.
+        if (['PDF_FREE', 'PDF_PREMIUM', 'PDF_ULTRA', 'VIDEO_LECTURE'].includes(type)) {
+             setState(prev => ({
+                ...prev,
+                selectedChapter: tempSelectedChapter,
+                lessonContent: {
+                    id: Date.now().toString(),
+                    title: tempSelectedChapter.title,
+                    subtitle: "Coming Soon",
+                    content: "",
+                    type: type,
+                    dateCreated: new Date().toISOString(),
+                    subjectName: state.selectedSubject?.name || '',
+                    isComingSoon: true
+                },
+                loading: false,
+                view: 'LESSON'
+            }));
+            setIsFullScreen(true);
             return;
         }
 

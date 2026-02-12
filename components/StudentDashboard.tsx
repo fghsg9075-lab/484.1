@@ -11,7 +11,7 @@ import { generateMorningInsight } from '../services/morningInsight';
 import { RedeemSection } from './RedeemSection';
 import { PrizeList } from './PrizeList';
 import { Store } from './Store';
-import { Layout, Gift, Sparkles, Megaphone, Lock, BookOpen, AlertCircle, Edit, Settings, Play, Pause, RotateCcw, MessageCircle, Gamepad2, Timer, CreditCard, Send, CheckCircle, Mail, X, Ban, Smartphone, Trophy, ShoppingBag, ArrowRight, Video, Youtube, Home, User as UserIcon, Book, BookOpenText, List, BarChart3, Award, Bell, Headphones, LifeBuoy, WifiOff, Zap, Star, Crown, History, ListChecks, Rocket, Ticket, TrendingUp, BrainCircuit, FileText, CheckSquare, Menu, LayoutGrid, Compass, User as UserIconOutline, MessageSquare, Bot } from 'lucide-react';
+import { Layout, Gift, Sparkles, Megaphone, Lock, BookOpen, AlertCircle, Edit, Settings, Play, Pause, RotateCcw, MessageCircle, Gamepad2, Timer, CreditCard, Send, CheckCircle, Mail, X, Ban, Smartphone, Trophy, ShoppingBag, ArrowRight, Video, Youtube, Home, User as UserIcon, Book, BookOpenText, List, BarChart3, Award, Bell, Headphones, LifeBuoy, WifiOff, Zap, Star, Crown, History, ListChecks, Rocket, Ticket, TrendingUp, BrainCircuit, FileText, CheckSquare, Menu, LayoutGrid, Compass, User as UserIconOutline, MessageSquare, Bot, LogOut } from 'lucide-react';
 import { SubjectSelection } from './SubjectSelection';
 import { BannerCarousel } from './BannerCarousel';
 import { ChapterSelection } from './ChapterSelection'; // Imported for Video Flow
@@ -208,6 +208,44 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
   const [showSidebar, setShowSidebar] = useState(false);
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showLogoutTimer, setShowLogoutTimer] = useState(false);
+  const [logoutTimer, setLogoutTimer] = useState(15);
+
+  // --- APP GREETING (DAILY CHECK-IN) ---
+  useEffect(() => {
+      // Check if greeting already shown today
+      const today = new Date().toDateString();
+      const shownKey = `greeting_shown_${user.id}_${today}`;
+      if (localStorage.getItem(shownKey)) return;
+
+      // Greeting Logic
+      const hour = new Date().getHours();
+      let greeting = "Hello";
+      if (hour < 12) greeting = "Good Morning";
+      else if (hour < 18) greeting = "Good Afternoon";
+      else greeting = "Good Evening";
+
+      // Check Study Time
+      // If user opens app late (e.g., after 6 PM) and study seconds < 30 mins
+      if (hour >= 18 && dailyStudySeconds < 1800) {
+          const msg = `${user.name}, aaj aapne padhai nahi ki hai, kahan the aap? 😏 Chaliye aaj ka goal set karte hain.`;
+          showAlert(msg, 'INFO', `${greeting} ${user.name}`);
+
+          // Auto-Speak if enabled (Assuming Voice Coach default is ON for now or we add a setting)
+          // We can use a simple check or new setting.
+          const synth = window.speechSynthesis;
+          if (synth && !synth.speaking) {
+               const u = new SpeechSynthesisUtterance(msg);
+               u.lang = 'hi-IN'; // Hindi tone requested
+               synth.speak(u);
+          }
+      } else {
+          // Standard Greeting
+          showAlert(`Welcome back, ${user.name}! Ready to learn?`, 'SUCCESS', greeting);
+      }
+
+      localStorage.setItem(shownKey, 'true');
+  }, [user.id, dailyStudySeconds]);
 
   // --- HEADER CONTROL ---
   useEffect(() => {
@@ -230,6 +268,21 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
           localStorage.setItem(`referral_shown_${user.id}`, 'true');
       }
   }, [user.id, user.createdAt, user.redeemedReferralCode]);
+
+  // --- LOGOUT TIMER ---
+  useEffect(() => {
+      let interval: any;
+      if (showLogoutTimer && logoutTimer > 0) {
+          interval = setInterval(() => setLogoutTimer(p => p - 1), 1000);
+      } else if (showLogoutTimer && logoutTimer === 0) {
+          // Auto Logout or Disable Logout? Requirement says "login nahi kar payenge" implies warning.
+          // Usually timer is delay to prevent accidental logout or force reading message.
+          // We'll just let the user click "I Remember" to logout manually after reading.
+          // Or we can disable the button until timer ends?
+          // Let's keep the timer running down.
+      }
+      return () => clearInterval(interval);
+  }, [showLogoutTimer, logoutTimer]);
 
   const handleSupportEmail = () => {
     const email = "nadim841442@gmail.com";
@@ -1458,7 +1511,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                         </div>
 
                         <button onClick={() => setEditMode(true)} className="w-full bg-slate-800 text-white py-3 rounded-xl font-bold hover:bg-slate-900">✏️ Edit Profile</button>
-                        <button onClick={() => {localStorage.removeItem('nst_current_user'); window.location.reload();}} className="w-full bg-red-500 text-white py-3 rounded-xl font-bold hover:bg-red-600">🚪 Logout</button>
+                        <button onClick={() => { setShowLogoutTimer(true); setLogoutTimer(15); }} className="w-full bg-red-500 text-white py-3 rounded-xl font-bold hover:bg-red-600">🚪 Logout</button>
                     </div>
                 </div>
       );
@@ -1788,6 +1841,51 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
         )}
 
         {/* MODALS */}
+        {showLogoutTimer && (
+            <div className="fixed inset-0 z-[200] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
+                <div className="bg-white rounded-3xl p-8 w-full max-w-sm text-center shadow-2xl relative overflow-hidden">
+                    <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 text-red-600 animate-pulse">
+                        <KeyRound size={32} />
+                    </div>
+                    <h2 className="text-2xl font-black text-slate-800 mb-2">Password Check!</h2>
+                    <p className="text-slate-600 font-medium mb-6">
+                        Aap ko yaad hai password? Agar yaad nahi hai to password change kijiye warna login nahi kar payenge.
+                    </p>
+
+                    {logoutTimer > 0 && (
+                        <div className="text-4xl font-black text-slate-900 mb-6 font-mono">
+                            00:{String(logoutTimer).padStart(2, '0')}
+                        </div>
+                    )}
+
+                    <div className="space-y-3">
+                        <button
+                            onClick={() => { setShowLogoutTimer(false); setEditMode(true); }}
+                            className="w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors"
+                        >
+                            Change Password
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (logoutTimer === 0) {
+                                    localStorage.removeItem('nst_current_user');
+                                    window.location.reload();
+                                }
+                            }}
+                            disabled={logoutTimer > 0}
+                            className={`w-full py-4 rounded-xl font-black text-white shadow-lg transition-all ${
+                                logoutTimer > 0
+                                ? 'bg-slate-300 cursor-not-allowed'
+                                : 'bg-red-600 hover:bg-red-700 active:scale-95'
+                            }`}
+                        >
+                            {logoutTimer > 0 ? `Wait ${logoutTimer}s` : 'Yes, I Remember (Logout)'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
         {showUserGuide && <UserGuide onClose={() => setShowUserGuide(false)} />}
         
         {editMode && (
@@ -1910,6 +2008,28 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
             message={alertConfig.message}
             onClose={() => setAlertConfig(prev => ({...prev, isOpen: false}))}
         />
+
+        {/* GUEST BANNER */}
+        {user.isGuest && (
+            <div className="fixed bottom-20 left-4 right-4 bg-orange-500 text-white p-4 rounded-2xl shadow-xl z-50 flex items-center justify-between animate-bounce-slow">
+                <div className="flex items-center gap-3">
+                    <AlertCircle size={24} className="text-white shrink-0" />
+                    <div>
+                        <p className="font-bold text-sm">Guest Mode Active</p>
+                        <p className="text-xs text-white/90">Apne account ko mobile/email se register kijiye warna ye account kho sakta hai.</p>
+                    </div>
+                </div>
+                <button
+                    onClick={() => {
+                        localStorage.removeItem('nst_current_user');
+                        window.location.reload();
+                    }}
+                    className="bg-white text-orange-600 px-4 py-2 rounded-xl font-bold text-xs shadow-sm hover:bg-orange-50 whitespace-nowrap"
+                >
+                    Register Now
+                </button>
+            </div>
+        )}
 
         {showChat && <UniversalChat user={user} onClose={() => setShowChat(false)} />}
 

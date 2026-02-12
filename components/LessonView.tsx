@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { LessonContent, Subject, ClassLevel, Chapter, MCQItem, ContentType, User, SystemSettings } from '../types';
-import { ArrowLeft, Clock, AlertTriangle, ExternalLink, CheckCircle, XCircle, Trophy, BookOpen, Play, Lock, ChevronRight, ChevronLeft, Save, X, Maximize, Volume2, Square, Zap, StopCircle, Globe, Lightbulb, FileText, BrainCircuit } from 'lucide-react';
+import { ArrowLeft, Clock, AlertTriangle, ExternalLink, CheckCircle, XCircle, Trophy, BookOpen, Play, Lock, ChevronRight, ChevronLeft, Save, X, Maximize, Volume2, Square, Zap, StopCircle, Globe, Lightbulb, FileText, BrainCircuit, Grip, CheckSquare } from 'lucide-react';
 import { CustomConfirm, CustomAlert } from './CustomDialogs';
 import { CustomPlayer } from './CustomPlayer';
 import remarkMath from 'remark-math';
@@ -54,6 +54,7 @@ export const LessonView: React.FC<Props> = ({
   const [recLoading, setRecLoading] = useState(false);
   const [viewingNote, setViewingNote] = useState<any>(null); // New state for HTML Note Modal
 
+  const [showQuestionDrawer, setShowQuestionDrawer] = useState(false);
   const [batchIndex, setBatchIndex] = useState(0);
   const BATCH_SIZE = 1;
 
@@ -611,6 +612,19 @@ export const LessonView: React.FC<Props> = ({
       }, 0);
       const canGoNext = currentBatchAttemptedCount >= Math.min(BATCH_SIZE, currentBatchData.length);
 
+      const handleOptionSelect = (qIdx: number, oIdx: number) => {
+          setMcqState(prev => ({ ...prev, [qIdx]: oIdx }));
+
+          // Auto-Next Logic
+          if (!showResults && (batchIndex + 1) * BATCH_SIZE < displayData.length) {
+              setTimeout(() => {
+                  setBatchIndex(prev => prev + 1);
+                  const container = document.querySelector('.mcq-container');
+                  if(container) container.scrollTop = 0;
+              }, 400); // 400ms delay for user feedback
+          }
+      };
+
       const handleSubmitRequest = () => {
           setShowSubmitModal(true);
       };
@@ -795,6 +809,55 @@ export const LessonView: React.FC<Props> = ({
                    </div>
                )}
 
+               {/* Question Drawer Overlay */}
+               {showQuestionDrawer && (
+                   <div className="fixed inset-0 z-[60] bg-slate-900/50 backdrop-blur-sm flex justify-end" onClick={() => setShowQuestionDrawer(false)}>
+                        <div className="w-80 bg-white h-full shadow-2xl animate-in slide-in-from-right duration-200 flex flex-col" onClick={e => e.stopPropagation()}>
+                            <div className="p-4 border-b flex items-center justify-between bg-slate-50">
+                                <h3 className="font-bold text-slate-800 flex items-center gap-2"><Grip size={18}/> Question Palette</h3>
+                                <button onClick={() => setShowQuestionDrawer(false)} className="p-2 hover:bg-slate-200 rounded-full"><X size={18}/></button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-4">
+                                <div className="grid grid-cols-5 gap-3">
+                                    {displayData.map((_, idx) => {
+                                        const isAnswered = mcqState[idx] !== undefined && mcqState[idx] !== null;
+                                        const isCurrent = idx === batchIndex;
+                                        // "Skipped" logic: Not answered and we have moved past it OR viewed it (simplification: if idx < batchIndex and not answered)
+                                        // For now, simpler color coding: Green (Answered), Blue (Current), Gray (Unattempted)
+
+                                        let btnClass = "aspect-square rounded-lg text-xs font-bold flex items-center justify-center transition-all border ";
+                                        if (isCurrent) {
+                                            btnClass += "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200 scale-110 ring-2 ring-blue-100";
+                                        } else if (isAnswered) {
+                                            btnClass += "bg-green-100 text-green-700 border-green-200 hover:bg-green-200";
+                                        } else {
+                                            btnClass += "bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100";
+                                        }
+
+                                        return (
+                                            <button
+                                                key={idx}
+                                                onClick={() => {
+                                                    setBatchIndex(idx);
+                                                    setShowQuestionDrawer(false);
+                                                }}
+                                                className={btnClass}
+                                            >
+                                                {idx + 1}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                            <div className="p-4 border-t bg-slate-50 text-xs text-slate-500 space-y-2">
+                                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-green-100 border border-green-200"></div> Answered</div>
+                                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-blue-600"></div> Current</div>
+                                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded bg-slate-50 border border-slate-200"></div> Not Attempted</div>
+                            </div>
+                        </div>
+                   </div>
+               )}
+
                <div className="flex items-center justify-between p-4 bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
                    <div className="flex gap-2">
                        <button onClick={onBack} className="flex items-center gap-2 text-slate-600 font-bold text-sm bg-slate-100 px-3 py-2 rounded-lg hover:bg-slate-200 transition-colors">
@@ -814,21 +877,22 @@ export const LessonView: React.FC<Props> = ({
                            </button>
                        )}
                    </div>
-                   <div className="text-right">
-                       <h3 className="font-bold text-slate-800 text-sm">MCQ Test</h3>
-                       {showResults ? (
-                           <span className="text-xs font-bold text-green-600">Analysis Mode • Page {batchIndex + 1}</span>
-                       ) : (
-                           <div className="flex flex-col items-end">
-                               <div className="flex gap-3 text-xs font-bold mb-1">
-                                   <span className="text-slate-500 flex items-center gap-1"><Clock size={12}/> {Math.floor(sessionTime / 60)}:{String(sessionTime % 60).padStart(2, '0')}</span>
-                                   <span className="text-green-600 flex items-center gap-1"><CheckCircle size={12}/> {currentCorrect}</span>
-                               </div>
-                               <span className="text-xs text-slate-400">
-                                   {Object.keys(mcqState).length}/{displayData.length} Attempted
-                               </span>
-                           </div>
-                       )}
+                   <div className="flex items-center gap-3">
+                       {/* Timer Display - Prominent */}
+                       <div className="flex items-center gap-2 bg-slate-900 text-white px-3 py-1.5 rounded-lg font-mono font-bold text-sm shadow-md">
+                           <Clock size={14} className="text-green-400 animate-pulse" />
+                           {Math.floor(sessionTime / 60)}:{String(sessionTime % 60).padStart(2, '0')}
+                       </div>
+
+                       <button
+                           onClick={() => setShowQuestionDrawer(true)}
+                           className="flex items-center gap-2 text-slate-600 font-bold text-xs bg-slate-100 border border-slate-200 px-3 py-2 rounded-lg hover:bg-slate-200 transition-colors"
+                       >
+                           <Grip size={16} /> <span className="hidden sm:inline">All Questions</span>
+                           <span className="bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded text-[10px] ml-1">
+                               {attemptedCount}/{displayData.length}
+                           </span>
+                       </button>
                    </div>
                </div>
                
@@ -878,7 +942,7 @@ export const LessonView: React.FC<Props> = ({
                                            <button 
                                                key={oIdx}
                                                disabled={isAnswered || showResults} 
-                                               onClick={() => setMcqState(prev => ({ ...prev, [idx]: oIdx }))}
+                                               onClick={() => handleOptionSelect(idx, oIdx)}
                                                className={btnClass}
                                            >
                                                <span className="relative z-10 flex justify-between items-center w-full gap-2">
@@ -921,24 +985,30 @@ export const LessonView: React.FC<Props> = ({
                    )}
 
                    {/* Logic for Single Question Navigation */}
-                   {hasMore ? (
-                        <button
-                           onClick={handleNextPage} 
-                           className="flex-[2] py-3 bg-blue-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-100"
-                       >
-                           Next <ChevronRight size={20} />
-                       </button>
-                   ) : (
-                       // Last Question: Show Submit if ready, or disabled next
-                       !showResults && (
-                           <button
-                               onClick={handleSubmitRequest}
-                               disabled={!canSubmit}
-                               className={`flex-[2] py-3 font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg ${canSubmit ? 'bg-green-600 text-white shadow-green-100' : 'bg-slate-200 text-slate-400'}`}
-                           >
-                               Submit Test <Trophy size={20} />
-                           </button>
-                       )
+                   {!showResults && (
+                       <>
+                           {hasMore ? (
+                                <button
+                                   onClick={handleNextPage}
+                                   className="flex-[2] py-3 bg-blue-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-100"
+                               >
+                                   Next <ChevronRight size={20} />
+                               </button>
+                           ) : (
+                               <div className="flex-[2]"></div> // Spacer if no next button on last page
+                           )}
+
+                           {/* Submit Button - Always visible if condition met, or on last page */}
+                           {(canSubmit || !hasMore) && (
+                               <button
+                                   onClick={handleSubmitRequest}
+                                   disabled={!canSubmit}
+                                   className={`flex-[2] py-3 font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg ${canSubmit ? 'bg-green-600 text-white shadow-green-100' : 'bg-slate-200 text-slate-400'}`}
+                               >
+                                   Submit <Trophy size={20} />
+                               </button>
+                           )}
+                       </>
                    )}
 
                    {showResults && !hasMore && (

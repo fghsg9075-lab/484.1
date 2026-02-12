@@ -7,11 +7,12 @@ interface Props {
   user: User;
   settings?: SystemSettings;
   onClose: () => void;
+  reportType?: 'MONTHLY' | 'ANNUAL';
 }
 
-export const MonthlyMarksheet: React.FC<Props> = ({ user, settings, onClose }) => {
+export const MonthlyMarksheet: React.FC<Props> = ({ user, settings, onClose, reportType = 'MONTHLY' }) => {
   
-  const currentMonthData = useMemo(() => {
+  const reportData = useMemo(() => {
       const now = new Date();
       const currentMonth = now.getMonth();
       const currentYear = now.getFullYear();
@@ -19,20 +20,26 @@ export const MonthlyMarksheet: React.FC<Props> = ({ user, settings, onClose }) =
       const history = user.mcqHistory || [];
       return history.filter(h => {
           const d = new Date(h.date);
+          if (reportType === 'ANNUAL') {
+              return d.getFullYear() === currentYear;
+          }
           return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
       }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [user.mcqHistory]);
+  }, [user.mcqHistory, reportType]);
 
   const stats = useMemo(() => {
-      const totalTests = currentMonthData.length;
-      const totalQuestions = currentMonthData.reduce((acc, curr) => acc + curr.totalQuestions, 0);
-      const totalScore = currentMonthData.reduce((acc, curr) => acc + curr.score, 0);
+      const totalTests = reportData.length;
+      const totalQuestions = reportData.reduce((acc, curr) => acc + curr.totalQuestions, 0);
+      const totalScore = reportData.reduce((acc, curr) => acc + curr.score, 0);
       const percentage = totalQuestions > 0 ? Math.round((totalScore / totalQuestions) * 100) : 0;
       
       return { totalTests, totalQuestions, totalScore, percentage };
-  }, [currentMonthData]);
+  }, [reportData]);
 
-  const monthName = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+  const reportTitle = reportType === 'ANNUAL'
+      ? `Annual Report ${new Date().getFullYear()}`
+      : new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+
   const devName = 'Nadim Anwar';
 
   const isScholarshipWinner = stats.percentage >= 90 && stats.totalTests > 0;
@@ -64,9 +71,9 @@ export const MonthlyMarksheet: React.FC<Props> = ({ user, settings, onClose }) =
                     </div>
                     <div>
                         <h1 className="text-sm font-black uppercase text-slate-900 tracking-wide">
-                            Monthly Report
+                            {reportType === 'ANNUAL' ? 'Annual Report' : 'Monthly Report'}
                         </h1>
-                        <p className="text-[10px] font-bold text-slate-400">{monthName}</p>
+                        <p className="text-[10px] font-bold text-slate-400">{reportTitle}</p>
                     </div>
                 </div>
                 <div className="flex gap-2">
@@ -93,7 +100,7 @@ export const MonthlyMarksheet: React.FC<Props> = ({ user, settings, onClose }) =
                         <h1 className="text-3xl font-black text-slate-900 uppercase tracking-wide leading-none mb-2">{settings?.appName || 'INSTITUTE NAME'}</h1>
                         <p className="text-lg font-bold text-indigo-600 uppercase tracking-widest">{settings?.aiName || 'AI Assessment Center'}</p>
                         <div className="mt-4 inline-block bg-slate-900 text-white px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest">
-                            Monthly Performance Report
+                            {reportType === 'ANNUAL' ? 'Annual Performance Report' : 'Monthly Performance Report'}
                         </div>
                     </div>
 
@@ -146,9 +153,9 @@ export const MonthlyMarksheet: React.FC<Props> = ({ user, settings, onClose }) =
                     {/* Test List Table */}
                     <div className="mb-8">
                         <h3 className="font-bold text-slate-800 uppercase text-xs mb-4 flex items-center gap-2">
-                            <Award size={14} className="text-slate-400" /> Test History ({monthName})
+                            <Award size={14} className="text-slate-400" /> Test History ({reportTitle})
                         </h3>
-                        {currentMonthData.length > 0 ? (
+                        {reportData.length > 0 ? (
                             <table className="w-full text-xs">
                                 <thead>
                                     <tr className="border-b-2 border-slate-100 text-slate-400">
@@ -158,7 +165,7 @@ export const MonthlyMarksheet: React.FC<Props> = ({ user, settings, onClose }) =
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {currentMonthData.map((test, i) => (
+                                    {reportData.map((test, i) => (
                                         <tr key={i} className="border-b border-slate-50 last:border-0">
                                             <td className="py-3 font-bold text-slate-500 w-24">
                                                 {new Date(test.date).toLocaleDateString(undefined, {day: '2-digit', month: 'short'})}

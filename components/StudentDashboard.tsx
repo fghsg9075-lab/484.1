@@ -203,6 +203,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
   
   // Monthly Report
   const [showMonthlyReport, setShowMonthlyReport] = useState(false);
+  const [marksheetType, setMarksheetType] = useState<'MONTHLY' | 'ANNUAL'>('MONTHLY');
   const [showReferralPopup, setShowReferralPopup] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
 
@@ -611,11 +612,28 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
     const unsub = onSnapshot(doc(db, "users", user.id), (doc) => {
         if (doc.exists()) {
             const cloudData = doc.data() as User;
-            if (cloudData.credits !== user.credits || 
-                cloudData.subscriptionTier !== user.subscriptionTier ||
-                cloudData.isPremium !== user.isPremium ||
-                cloudData.isGameBanned !== user.isGameBanned) {
-                const updated = { ...user, ...cloudData };
+            // Check for critical updates or if we need to sync history
+            // We only trigger update if critical fields changed OR if we need to save our local history to cloud
+
+            const needsUpdate = cloudData.credits !== user.credits ||
+                                cloudData.subscriptionTier !== user.subscriptionTier ||
+                                cloudData.isPremium !== user.isPremium ||
+                                cloudData.isGameBanned !== user.isGameBanned;
+
+            if (needsUpdate) {
+                // DATA PERSISTENCE FIX:
+                // If cloud has NO history but we have local history, keep local.
+                // This prevents overwriting valid local data with empty cloud data if sync failed previously.
+
+                const updated: User = { ...user, ...cloudData };
+
+                if ((!cloudData.mcqHistory || cloudData.mcqHistory.length === 0) && (user.mcqHistory && user.mcqHistory.length > 0)) {
+                    console.log("Restoring local history over empty cloud history...");
+                    updated.mcqHistory = user.mcqHistory;
+                    // Ideally we should push this back to cloud, but let's at least not lose it locally
+                    saveUserToLive(updated);
+                }
+
                 onRedeemSuccess(updated); 
             }
         }
@@ -1001,7 +1019,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                         </button>
 
                         <button
-                            onClick={() => setShowMonthlyReport(true)}
+                            onClick={() => { setMarksheetType('ANNUAL'); setShowMonthlyReport(true); }}
                             className="bg-white border-2 border-slate-100 p-6 rounded-3xl shadow-sm flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all hover:border-blue-200 h-32"
                         >
                             <BarChart3 size={32} className="text-blue-600 mb-1" />
@@ -1323,7 +1341,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                             </div>
                         </div>
                         
-                        <button onClick={() => setShowMonthlyReport(true)} className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 shadow flex items-center justify-center gap-2"><BarChart3 size={18} /> View Monthly Report</button>
+                        <button onClick={() => { setMarksheetType('MONTHLY'); setShowMonthlyReport(true); }} className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 shadow flex items-center justify-center gap-2"><BarChart3 size={18} /> View Monthly Report</button>
                         <button onClick={() => onTabChange('SUB_HISTORY')} className="w-full bg-purple-600 text-white py-3 rounded-xl font-bold hover:bg-purple-700 shadow flex items-center justify-center gap-2"><History size={18} /> View Subscription History</button>
                         
                         <div className="flex items-center justify-between p-4 bg-slate-100 rounded-xl">
@@ -1342,7 +1360,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                         </div>
 
                         <button onClick={() => setEditMode(true)} className="w-full bg-slate-800 text-white py-3 rounded-xl font-bold hover:bg-slate-900">✏️ Edit Profile</button>
-                        <button onClick={() => {localStorage.removeItem(`nst_user_${user.id}`); window.location.reload();}} className="w-full bg-red-500 text-white py-3 rounded-xl font-bold hover:bg-red-600">🚪 Logout</button>
+                        <button onClick={() => {localStorage.removeItem('nst_current_user'); window.location.reload();}} className="w-full bg-red-500 text-white py-3 rounded-xl font-bold hover:bg-red-600">🚪 Logout</button>
                     </div>
                 </div>
       );
@@ -1811,7 +1829,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
             }}
         />
 
-        {showMonthlyReport && <MonthlyMarksheet user={user} settings={settings} onClose={() => setShowMonthlyReport(false)} />}
+        {showMonthlyReport && <MonthlyMarksheet user={user} settings={settings} onClose={() => setShowMonthlyReport(false)} reportType={marksheetType} />}
         {showReferralPopup && <ReferralPopup user={user} onClose={() => setShowReferralPopup(false)} onUpdateUser={handleUserUpdate} />}
 
         {/* SIDEBAR OVERLAY */}

@@ -737,6 +737,7 @@ export interface MCQResult {
       qIndex: number;
       selected: number; // -1 if skipped
       correct: number;
+      timeSpent?: number; // Time in seconds
   }[];
 
   wrongQuestions?: {

@@ -20,7 +20,7 @@ interface Props {
   chapter: Chapter;
   loading: boolean;
   onBack: () => void;
-  onMCQComplete?: (count: number, answers: Record<number, number>, usedData: MCQItem[], timeTaken: number) => void; 
+  onMCQComplete?: (count: number, answers: Record<number, number>, usedData: MCQItem[], timeTaken: number, questionTimes?: Record<number, number>) => void;
   user?: User; // Optional for non-MCQ views
   onUpdateUser?: (user: User) => void;
   settings?: SystemSettings; // New Prop for Pricing
@@ -43,6 +43,7 @@ export const LessonView: React.FC<Props> = ({
   onLaunchContent
 }) => {
   const [mcqState, setMcqState] = useState<Record<number, number | null>>({});
+  const [timeSpentPerQuestion, setTimeSpentPerQuestion] = useState<Record<number, number>>({});
   const [showResults, setShowResults] = useState(false); // Used to trigger Analysis Mode
   const [localMcqData, setLocalMcqData] = useState<MCQItem[]>([]);
   const [showResumePrompt, setShowResumePrompt] = useState(false);
@@ -88,16 +89,25 @@ export const LessonView: React.FC<Props> = ({
   // TIMER STATE
   const [sessionTime, setSessionTime] = useState(0); // Total seconds
   
-  // TIMER EFFECT
+      // TIMER EFFECT (UPDATED: Track Per Question)
   useEffect(() => {
       let interval: any;
-      if (!showResults && !showSubmitModal && !showResumePrompt) {
+          if (!showResults && !showSubmitModal && !showResumePrompt && content?.mcqData) {
           interval = setInterval(() => {
               setSessionTime(prev => prev + 1);
+
+                  // Track time for current question (only if viewing 1 question at a time or first in batch)
+                  // Assuming batchIndex corresponds to question index if BATCH_SIZE is 1
+                  if (true) { // BATCH_SIZE is confirmed 1 in render logic
+                      setTimeSpentPerQuestion(prev => ({
+                          ...prev,
+                          [batchIndex]: (prev[batchIndex] || 0) + 1
+                      }));
+                  }
           }, 1000);
       }
       return () => clearInterval(interval);
-  }, [showResults, showSubmitModal, showResumePrompt]);
+      }, [showResults, showSubmitModal, showResumePrompt, batchIndex, content]);
 
   // ANTI-CHEAT (Exam Mode)
   useEffect(() => {
@@ -495,7 +505,7 @@ export const LessonView: React.FC<Props> = ({
 
   // --- MCQ RENDERER ---
   if ((content.type === 'MCQ_ANALYSIS' || content.type === 'MCQ_SIMPLE') && content.mcqData) {
-      const BATCH_SIZE = 10;
+      const BATCH_SIZE = 1; // UPDATE: Show 1 question at a time as requested
       const [batchIndex, setBatchIndex] = useState(0);
 
       // --- INITIALIZATION & RESUME LOGIC ---
@@ -616,7 +626,7 @@ export const LessonView: React.FC<Props> = ({
         setAnalysisUnlocked(false);
         
         if (onMCQComplete) {
-            onMCQComplete(score, mcqState as Record<number, number>, displayData, sessionTime);
+            onMCQComplete(score, mcqState as Record<number, number>, displayData, sessionTime, timeSpentPerQuestion);
         }
 
         // EXTRA SYNC FOR HISTORY (Ensuring it saves even if parent is busy)
@@ -909,23 +919,28 @@ export const LessonView: React.FC<Props> = ({
                            <ChevronLeft size={20} /> Back
                        </button>
                    )}
-                   {(hasMore || (!showResults && !canSubmit)) && (
-                       <button 
+
+                   {/* Logic for Single Question Navigation */}
+                   {hasMore ? (
+                        <button
                            onClick={handleNextPage} 
-                           disabled={!hasMore || !canGoNext}
-                           className="flex-[2] py-3 bg-blue-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-100 disabled:opacity-50"
+                           className="flex-[2] py-3 bg-blue-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-100"
                        >
-                           {canGoNext ? `Next ${BATCH_SIZE} Questions` : `Solve all to Unlock Next`} <ChevronRight size={20} />
+                           Next <ChevronRight size={20} />
                        </button>
+                   ) : (
+                       // Last Question: Show Submit if ready, or disabled next
+                       !showResults && (
+                           <button
+                               onClick={handleSubmitRequest}
+                               disabled={!canSubmit}
+                               className={`flex-[2] py-3 font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg ${canSubmit ? 'bg-green-600 text-white shadow-green-100' : 'bg-slate-200 text-slate-400'}`}
+                           >
+                               Submit Test <Trophy size={20} />
+                           </button>
+                       )
                    )}
-                   {!showResults && canSubmit && (
-                       <button 
-                           onClick={handleSubmitRequest}
-                           className="flex-[2] py-3 bg-green-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-green-100"
-                       >
-                           Submit Test <Trophy size={20} />
-                       </button>
-                   )}
+
                    {showResults && !hasMore && (
                        <button 
                            onClick={onBack}

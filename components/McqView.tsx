@@ -220,17 +220,22 @@ export const McqView: React.FC<Props> = ({
       setLoading(false);
   };
 
-  const handleMCQComplete = (score: number, answers: Record<number, number>, usedData: any[], timeTaken: number) => {
+  const handleMCQComplete = (score: number, answers: Record<number, number>, usedData: any[], timeTaken: number, timePerQuestion?: Record<number, number>) => {
       // 1. FILTER & REMAP DATA (Strict Requirement: Only show attempted questions)
       const answeredIndices = Object.keys(answers).map(Number).sort((a,b) => a - b);
       
       // Create the subset of questions
       const submittedQuestions = answeredIndices.map(idx => usedData[idx]);
       
-      // Remap answers to the new indices (0, 1, 2...)
+      // Remap answers to the new indices (0, 1, 2...) AND Time Data
       const remappedAnswers: Record<number, number> = {};
+      const remappedTime: Record<number, number> = {};
+
       answeredIndices.forEach((oldIdx, newIdx) => {
           remappedAnswers[newIdx] = answers[oldIdx];
+          if (timePerQuestion && timePerQuestion[oldIdx] !== undefined) {
+              remappedTime[newIdx] = timePerQuestion[oldIdx];
+          }
       });
 
       // 2. Calculate Analytics
@@ -245,7 +250,8 @@ export const McqView: React.FC<Props> = ({
       const omrData = submittedQuestions.map((q, idx) => ({
           qIndex: idx,
           selected: remappedAnswers[idx] !== undefined ? remappedAnswers[idx] : -1,
-          correct: q.correctAnswer
+          correct: q.correctAnswer,
+          timeSpent: remappedTime[idx] || 0 // Store per-question time
       }));
 
       // Build Wrong Questions List (Strictly Incorrect Attempts)
@@ -290,6 +296,7 @@ export const McqView: React.FC<Props> = ({
           classLevel: classLevel,
           omrData: omrData,
           wrongQuestions: wrongQuestions,
+          questionTimes: Object.values(remappedTime),
           performanceLabel: perfLabel
       };
 

@@ -12,3 +12,5 @@ Port 5000 is in use, trying another one...
 9:14:14 AM [vite] (client) hmr update /components/LessonView.tsx
 9:53:39 AM [vite] (client) hmr update /components/LessonView.tsx
 9:53:48 AM [vite] (client) hmr update /components/LessonView.tsx
+10:23:45 AM [vite] (client) hmr update /components/LessonView.tsx
+10:24:08 AM [vite] (client) hmr update /components/StudentDashboard.tsx

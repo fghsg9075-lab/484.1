@@ -56,6 +56,7 @@ export const LessonView: React.FC<Props> = ({
 
   const [showQuestionDrawer, setShowQuestionDrawer] = useState(false);
   const [batchIndex, setBatchIndex] = useState(0);
+  const [autoReadEnabled, setAutoReadEnabled] = useState(true);
   const BATCH_SIZE = 1;
 
   // LANGUAGE AUTO-SELECT
@@ -112,6 +113,30 @@ export const LessonView: React.FC<Props> = ({
       }
       return () => clearInterval(interval);
       }, [showResults, showSubmitModal, showResumePrompt, batchIndex, content]);
+
+  // AUTO READ MCQ
+  useEffect(() => {
+      if (
+          !showResults &&
+          !showSubmitModal &&
+          !showResumePrompt &&
+          content?.mcqData &&
+          autoReadEnabled &&
+          batchIndex < (localMcqData.length || (content.mcqData || []).length)
+      ) {
+          const displayData = localMcqData.length > 0 ? localMcqData : (content.mcqData || []);
+          const q = displayData[batchIndex];
+          if (q) {
+              // Wait a bit for transition
+              setTimeout(() => {
+                  const text = `${q.question}. Options: ${q.options.join(', ')}`;
+                  startSpeaking(text);
+              }, 500);
+          }
+      } else {
+          window.speechSynthesis.cancel();
+      }
+  }, [batchIndex, showResults, showSubmitModal, showResumePrompt, autoReadEnabled]);
 
   // ANTI-CHEAT (Exam Mode)
   useEffect(() => {
@@ -639,6 +664,16 @@ export const LessonView: React.FC<Props> = ({
         setShowResults(false);
         setAnalysisUnlocked(false);
         
+        // CHECK WARNING (Rushed Questions)
+        const rushedCount = Object.keys(timeSpentPerQuestion).filter(k => timeSpentPerQuestion[parseInt(k)] < 5).length;
+        if (rushedCount > 5) {
+            setAlertConfig({
+                isOpen: true,
+                type: 'ERROR',
+                message: "Warning: It seems you finished too fast. Try to read questions carefully next time!"
+            });
+        }
+
         if (onMCQComplete) {
             onMCQComplete(score, mcqState as Record<number, number>, displayData, sessionTime, timeSpentPerQuestion);
         }
@@ -878,6 +913,18 @@ export const LessonView: React.FC<Props> = ({
                        )}
                    </div>
                    <div className="flex items-center gap-3">
+                       {/* Auto Read Toggle */}
+                       <button
+                           onClick={() => {
+                               const newState = !autoReadEnabled;
+                               setAutoReadEnabled(newState);
+                               if (!newState) window.speechSynthesis.cancel();
+                           }}
+                           className={`p-2 rounded-lg transition-all ${autoReadEnabled ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}
+                       >
+                           {autoReadEnabled ? <Volume2 size={18} /> : <Volume2 size={18} className="opacity-50" />}
+                       </button>
+
                        {/* Timer Display - Prominent */}
                        <div className="flex items-center gap-2 bg-slate-900 text-white px-3 py-1.5 rounded-lg font-mono font-bold text-sm shadow-md">
                            <Clock size={14} className="text-green-400 animate-pulse" />

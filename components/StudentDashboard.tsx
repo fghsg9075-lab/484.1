@@ -1080,28 +1080,28 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                                     image: 'https://img.freepik.com/free-vector/online-document-concept-illustration_114360-5453.jpg',
                                     title: 'Premium PDFs',
                                     subtitle: 'High Quality Notes Library',
-                                    link: 'PDF'
+                                    link: 'STORE'
                                 },
                                 {
                                     id: 'premium_mcq',
                                     image: 'https://img.freepik.com/free-vector/checklist-concept-illustration_114360-479.jpg',
                                     title: 'Premium MCQ Tests',
                                     subtitle: 'Practice & Master Topics',
-                                    link: 'MCQ'
+                                    link: 'STORE'
                                 },
                                 {
                                     id: 'premium_video',
                                     image: 'https://img.freepik.com/free-vector/online-tutorials-concept_52683-37480.jpg',
                                     title: 'Premium Video Lectures',
                                     subtitle: 'Learn from Experts',
-                                    link: 'VIDEO'
+                                    link: 'STORE'
                                 },
                                 {
                                     id: 'premium_audio',
                                     image: 'https://img.freepik.com/free-vector/podcast-concept-illustration_114360-1068.jpg',
                                     title: 'Premium Audiobooks',
                                     subtitle: 'Listen & Learn Anywhere',
-                                    link: 'AUDIO'
+                                    link: 'STORE'
                                 },
                                 {
                                     id: 'ai_tutor',

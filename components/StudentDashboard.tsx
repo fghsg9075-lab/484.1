@@ -261,11 +261,13 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
   }
 
   // --- SELF-REPAIR SYNC (Fix for "New User Not Showing") ---
-  useEffect(() => {
-      if (user && user.id) {
-          saveUserToLive(user);
-      }
-  }, [user.id]);
+  // REMOVED: This was causing data overwrite and potential infinite loops.
+  // We should rely on Auth/Login to save initial state, and onSnapshot for updates.
+  // useEffect(() => {
+  //     if (user && user.id) {
+  //         saveUserToLive(user);
+  //     }
+  // }, [user.id]);
 
   // --- DISCOUNT TIMER STATE ---
   const [discountTimer, setDiscountTimer] = useState<string | null>(null);
@@ -607,31 +609,44 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
   };
 
   // --- TRACK TODAY'S ACTIVITY & FIRST DAY BONUSES ---
+  // Use Ref to avoid stale closures in onSnapshot
+  const userRef = React.useRef(user);
+  useEffect(() => {
+      userRef.current = user;
+  }, [user]);
+
   useEffect(() => {
     if (!user.id) return;
     const unsub = onSnapshot(doc(db, "users", user.id), (doc) => {
         if (doc.exists()) {
             const cloudData = doc.data() as User;
+            const currentUser = userRef.current;
+
             // Check for critical updates or if we need to sync history
             // We only trigger update if critical fields changed OR if we need to save our local history to cloud
 
-            const needsUpdate = cloudData.credits !== user.credits ||
-                                cloudData.subscriptionTier !== user.subscriptionTier ||
-                                cloudData.isPremium !== user.isPremium ||
-                                cloudData.isGameBanned !== user.isGameBanned;
+            const needsUpdate = cloudData.credits !== currentUser.credits ||
+                                cloudData.subscriptionTier !== currentUser.subscriptionTier ||
+                                cloudData.isPremium !== currentUser.isPremium ||
+                                cloudData.isGameBanned !== currentUser.isGameBanned ||
+                                // Also check for deep object changes if necessary (e.g. new test result from another device)
+                                (cloudData.mcqHistory?.length || 0) > (currentUser.mcqHistory?.length || 0);
 
             if (needsUpdate) {
+                console.log("Syncing User Data from Cloud...", cloudData);
                 // DATA PERSISTENCE FIX:
                 // If cloud has NO history but we have local history, keep local.
                 // This prevents overwriting valid local data with empty cloud data if sync failed previously.
 
-                const updated: User = { ...user, ...cloudData };
+                const updated: User = { ...currentUser, ...cloudData };
 
-                if ((!cloudData.mcqHistory || cloudData.mcqHistory.length === 0) && (user.mcqHistory && user.mcqHistory.length > 0)) {
+                // RESTORE LOCAL HISTORY IF CLOUD IS EMPTY (Safety Net)
+                if ((!cloudData.mcqHistory || cloudData.mcqHistory.length === 0) && (currentUser.mcqHistory && currentUser.mcqHistory.length > 0)) {
                     console.log("Restoring local history over empty cloud history...");
-                    updated.mcqHistory = user.mcqHistory;
+                    updated.mcqHistory = currentUser.mcqHistory;
                     // Ideally we should push this back to cloud, but let's at least not lose it locally
-                    saveUserToLive(updated);
+                    // Only save if we are sure (to avoid loop). For now, just update local state.
+                    // saveUserToLive(updated); // Avoid write loop
                 }
 
                 onRedeemSuccess(updated); 

@@ -1,5 +1,5 @@
 
-import { ClassLevel, Subject, Chapter, LessonContent, Language, Board, Stream, ContentType, MCQItem, SystemSettings } from "../types";
+import { ClassLevel, Subject, Chapter, LessonContent, Language, Board, Stream, ContentType, MCQItem, SystemSettings, User } from "../types";
 import { STATIC_SYLLABUS } from "../constants";
 import { getChapterData, getCustomSyllabus, incrementApiUsage, getApiUsage, rtdb, getSystemSettings } from "../firebase";
 import { ref, get } from "firebase/database";
@@ -966,5 +966,63 @@ export const generateUltraAnalysis = async (
             { role: "user", content: prompt }
         ], modelName);
         return cleanJson(content || "{}");
+    }, 'STUDENT');
+};
+
+export const generateStudyRoadmap = async (user: User, subjects: Subject[], modelName: string = "llama-3.1-8b-instant"): Promise<any> => {
+    // 1. Analyze History
+    const mcqHistory = user.mcqHistory || [];
+    const usageHistory = user.usageHistory || [];
+
+    // Identify Weak Topics (Score < 50%)
+    const weakTopics = mcqHistory
+        .filter(h => (h.score / h.total) < 0.5)
+        .map(h => `${h.chapterTitle} (${h.subjectName})`)
+        .slice(0, 5); // Top 5 weak areas
+
+    // Identify Recently Studied (to skip immediate repetition unless weak)
+    const recentActivity = usageHistory
+        .slice(0, 10)
+        .map(u => u.itemTitle);
+
+    const prompt = `
+    You are an expert AI Study Planner.
+    User Context:
+    - Class: ${user.classLevel || '10'}
+    - Board: ${user.board || 'CBSE'}
+    - Weak Topics: ${weakTopics.join(', ') || "None recorded yet"}
+    - Recently Studied: ${recentActivity.join(', ') || "None"}
+
+    TASK:
+    Create a personalized "Today's Goal" roadmap for this student.
+    Rules:
+    1. If they have Weak Topics, prioritize 1-2 of them for revision.
+    2. Suggest 1 NEW topic to start (Next logical step).
+    3. Suggest 1 MCQ test to take.
+    4. Avoid topics studied very recently unless they are weak.
+
+    OUTPUT FORMAT (STRICT JSON):
+    {
+      "tasks": [
+        {
+          "id": "task-1",
+          "type": "READ" | "MCQ",
+          "title": "Chapter Name",
+          "subject": "Subject Name",
+          "reason": "Why this task? (e.g. 'You scored low last time' or 'Start new topic')"
+        }
+      ],
+      "motivation": "A short, punchy 1-line motivation for today."
+    }
+
+    Generate 3-4 tasks maximum.
+    `;
+
+    return await executeWithRotation(async () => {
+        const content = await callGroqApi([
+            { role: "system", content: "You are a study planner. Return strictly valid JSON." },
+            { role: "user", content: prompt }
+        ], modelName);
+        return JSON.parse(cleanJson(content || "{}"));
     }, 'STUDENT');
 };

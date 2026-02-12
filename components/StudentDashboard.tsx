@@ -8,6 +8,7 @@ import { getSubjectsList, DEFAULT_APP_FEATURES, ALL_APP_FEATURES } from '../cons
 import { getActiveChallenges } from '../services/questionBank';
 import { generateDailyChallengeQuestions } from '../utils/challengeGenerator';
 import { generateMorningInsight } from '../services/morningInsight';
+import { generateStudyRoadmap } from '../services/groq';
 import { getHolidayGreeting } from '../utils/holidayGreetings';
 import { RedeemSection } from './RedeemSection';
 import { PrizeList } from './PrizeList';
@@ -218,6 +219,25 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
       const today = new Date().toDateString();
       const shownKey = `greeting_shown_${user.id}_${today}`;
       if (localStorage.getItem(shownKey)) return;
+
+      // AI ROADMAP GENERATION
+      if (settings?.isAiRoadmapEnabled) {
+          const roadmapKey = `nst_roadmap_${user.id}_${today}`;
+          if (!localStorage.getItem(roadmapKey) && !user.dailyRoadmap?.date?.includes(today)) {
+              console.log("Generating Daily Roadmap...");
+              generateStudyRoadmap(user, getSubjectsList(user.classLevel || '10', user.stream)).then(roadmap => {
+                  if (roadmap) {
+                      const updatedUser = {
+                          ...user,
+                          dailyRoadmap: { date: today, tasks: roadmap.tasks, motivation: roadmap.motivation }
+                      };
+                      handleUserUpdate(updatedUser);
+                      localStorage.setItem(roadmapKey, 'true');
+                      showAlert("New Daily Study Plan Ready!", 'SUCCESS');
+                  }
+              }).catch(e => console.error("Roadmap Gen Failed", e));
+          }
+      }
 
       // Greeting Logic
       const hour = new Date().getHours();
@@ -1075,6 +1095,52 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                         }}
                     />
                 </DashboardSectionWrapper>
+
+                {/* AI ROADMAP DISPLAY (If Enabled and Available) */}
+                {settings?.isAiRoadmapEnabled && user.dailyRoadmap && user.dailyRoadmap.date === new Date().toDateString() && (
+                    <DashboardSectionWrapper id="section_roadmap" label="Today's Plan" settings={settings} isLayoutEditing={isLayoutEditing} onToggleVisibility={toggleLayoutVisibility}>
+                        <div className="bg-gradient-to-r from-violet-600 to-indigo-600 p-6 rounded-3xl shadow-lg shadow-indigo-200 text-white relative overflow-hidden mb-4">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+
+                            <div className="relative z-10">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 className="font-black text-lg flex items-center gap-2">
+                                            <Compass size={20} className="text-yellow-300" /> Today's Goal
+                                        </h3>
+                                        <p className="text-xs text-indigo-100 italic">"{user.dailyRoadmap.motivation}"</p>
+                                    </div>
+                                    <span className="bg-white/20 text-xs font-bold px-3 py-1 rounded-full">{user.dailyRoadmap.tasks.length} Tasks</span>
+                                </div>
+
+                                <div className="space-y-3">
+                                    {user.dailyRoadmap.tasks.map((task, idx) => (
+                                        <div key={idx} className="bg-white/10 p-3 rounded-xl border border-white/10 flex items-center gap-3 backdrop-blur-sm">
+                                            <div className={`p-2 rounded-full ${task.type === 'MCQ' ? 'bg-pink-500' : 'bg-blue-500'}`}>
+                                                {task.type === 'MCQ' ? <CheckSquare size={14} /> : <BookOpen size={14} />}
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="font-bold text-sm">{task.title}</p>
+                                                <p className="text-[10px] text-indigo-200">{task.subject} • {task.reason}</p>
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    // Auto-Navigate to Content
+                                                    onTabChange(task.type === 'MCQ' ? 'MCQ' : 'PDF');
+                                                    // In a real app, we would deep link to the chapter.
+                                                    // For now, we switch tabs to guide them.
+                                                }}
+                                                className="bg-white text-indigo-600 text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-indigo-50"
+                                            >
+                                                Start
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </DashboardSectionWrapper>
+                )}
 
                 {/* STUDY TIMER */}
                 <DashboardSectionWrapper id="section_timer" label="Study Goal" settings={settings} isLayoutEditing={isLayoutEditing} onToggleVisibility={toggleLayoutVisibility}>

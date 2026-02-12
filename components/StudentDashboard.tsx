@@ -974,12 +974,15 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className="flex flex-col items-end">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">Credits</span>
+                        <button
+                            onClick={() => onTabChange('STORE')}
+                            className="flex flex-col items-end group active:scale-95 transition-transform"
+                        >
+                            <span className="text-[10px] font-bold text-slate-400 uppercase group-hover:text-blue-600 transition-colors">Credits</span>
                             <span className="font-black text-blue-600 flex items-center gap-1">
-                                <Crown size={14} className="fill-blue-600"/> {user.credits}
+                                <Crown size={14} className="fill-blue-600"/> {user.credits} <span className="bg-blue-100 text-blue-700 text-[8px] px-1 rounded ml-1 group-hover:bg-blue-600 group-hover:text-white transition-colors">ADD</span>
                             </span>
-                        </div>
+                        </button>
                         <div className="flex flex-col items-end border-l pl-3 border-slate-100">
                             <span className="text-[10px] font-bold text-slate-400 uppercase">Streak</span>
                             <span className="font-black text-orange-500 flex items-center gap-1">

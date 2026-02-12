@@ -1998,6 +1998,33 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                                 <span className="absolute top-4 right-4 w-3 h-3 bg-red-500 rounded-full animate-pulse border-2 border-white"></span>
                             )}
                         </button>
+
+                        {/* EXTERNAL APPS (INTERNAL SYSTEM) */}
+                        {settings?.externalApps && settings.externalApps.length > 0 && (
+                            <>
+                                <div className="h-px bg-slate-100 my-2"></div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 mb-1 px-2">Apps</p>
+                                {settings.externalApps.map((app, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => {
+                                            handleExternalAppClick(app);
+                                            setShowSidebar(false);
+                                        }}
+                                        className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700"
+                                    >
+                                        <div className="bg-orange-100 text-orange-600 p-2 rounded-lg">
+                                            <Globe size={20} />
+                                        </div>
+                                        <div className="flex-1 text-left">
+                                            <span className="block leading-tight">{app.name}</span>
+                                            {app.creditCost > 0 && <span className="text-[9px] text-orange-600 font-black">{app.creditCost} Coins</span>}
+                                        </div>
+                                        {app.isLocked && <Lock size={14} className="text-slate-400" />}
+                                    </button>
+                                ))}
+                            </>
+                        )}
                     </div>
 
                     <div className="p-4 border-t border-slate-100">

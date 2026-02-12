@@ -128,11 +128,12 @@ export const LessonView: React.FC<Props> = ({
   }, [content, showResults, showSubmitModal, mcqState]); // Added mcqState to ensure handleConfirmSubmit has latest data
 
   // Custom Dialog State
-  const [alertConfig, setAlertConfig] = useState<{isOpen: boolean, message: string}>({isOpen: false, message: ''});
+  const [alertConfig, setAlertConfig] = useState<{isOpen: boolean, message: string, title?: string, onClose?: () => void}>({isOpen: false, message: ''});
   const [confirmConfig, setConfirmConfig] = useState<{isOpen: boolean, title: string, message: string, onConfirm: () => void}>({isOpen: false, title: '', message: '', onConfirm: () => {}});
 
   // TTS STATE
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [autoRead, setAutoRead] = useState(false); // NEW: Auto Read Toggle
   const [speechRate, setSpeechRate] = useState(1.0);
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
   const currentTextRef = useRef<string | null>(null);
@@ -254,6 +255,20 @@ export const LessonView: React.FC<Props> = ({
       }
   };
 
+  // AUTO READ EFFECT (For Notes/HTML)
+  useEffect(() => {
+    if (autoRead && !isSpeaking && content) {
+        // Delay slightly to allow render
+        const timer = setTimeout(() => {
+            if (content.type === 'NOTES_IMAGE_AI' || content.aiHtmlContent || (content.content && !content.content.startsWith('http'))) {
+                 const text = content.aiHtmlContent || content.content || '';
+                 if (text) handleSpeak(decodeHtml(text));
+            }
+        }, 1000);
+        return () => clearTimeout(timer);
+    }
+  }, [autoRead, content]);
+
   if (loading) {
       return (
           <div className="h-[70vh] flex flex-col items-center justify-center text-center p-8">
@@ -339,8 +354,12 @@ export const LessonView: React.FC<Props> = ({
                           >
                               <Globe size={14} /> {language === 'English' ? 'Hindi (हिंदी)' : 'English'}
                           </button>
+                      {/* AUTO READ TOGGLE */}
+                      <button onClick={() => setAutoRead(!autoRead)} className={`p-2 rounded-full transition-all ${autoRead ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'}`} title="Auto Read">
+                          {autoRead ? <Volume2 size={18} /> : <Volume2 size={18} className="opacity-50" />}
+                      </button>
                       <button onClick={() => handleSpeak(decodedContent)} className={`p-2 rounded-full transition-all ${isSpeaking ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`} title="Listen (FREE)">
-                              {isSpeaking ? <Square size={18} fill="currentColor" /> : <Volume2 size={18} />}
+                              {isSpeaking ? <Square size={18} fill="currentColor" /> : <Play size={18} />}
                       </button>
                       {/* DOWNLOAD BUTTON */}
                       <button title="Download Audio" onClick={() => alert("Downloading Audio...")} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-600 transition-colors">
@@ -462,8 +481,12 @@ export const LessonView: React.FC<Props> = ({
                       >
                           <Globe size={14} /> {language === 'English' ? 'Hindi (हिंदी)' : 'English'}
                       </button>
+                      {/* AUTO READ TOGGLE */}
+                      <button onClick={() => setAutoRead(!autoRead)} className={`p-2 rounded-full transition-all ${autoRead ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'}`} title="Auto Read">
+                          {autoRead ? <Volume2 size={18} /> : <Volume2 size={18} className="opacity-50" />}
+                      </button>
                       <button onClick={() => handleSpeak(content.content)} className={`p-2 rounded-full transition-all ${isSpeaking ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`} title="Listen (FREE)">
-                          {isSpeaking ? <Square size={18} fill="currentColor" /> : <Volume2 size={18} />}
+                          {isSpeaking ? <Square size={18} fill="currentColor" /> : <Play size={18} />}
                       </button>
                       {/* DOWNLOAD BUTTON */}
                       <button title="Download Audio" onClick={() => alert("Downloading Audio...")} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-600 transition-colors">
@@ -535,6 +558,20 @@ export const LessonView: React.FC<Props> = ({
               }
           });
       }, [content.mcqData, content.manualMcqData_HI, chapter.id, content.userAnswers, language]);
+
+      // AUTO READ EFFECT (MCQ)
+      useEffect(() => {
+          if (autoRead && !showResults && content.mcqData) {
+              const displayData = localMcqData.length > 0 ? localMcqData : (content.mcqData || []);
+              const currentQ = displayData[batchIndex];
+              if (currentQ) {
+                  const text = `Question ${batchIndex + 1}. ${currentQ.question}. Options are: ${currentQ.options.join('. ')}`;
+                  // Stop previous speech first
+                  window.speechSynthesis.cancel();
+                  setTimeout(() => handleSpeak(text), 500);
+              }
+          }
+      }, [batchIndex, autoRead, showResults, localMcqData]);
 
       // --- SAVE PROGRESS LOGIC ---
       useEffect(() => {
@@ -631,6 +668,28 @@ export const LessonView: React.FC<Props> = ({
 
     const handleConfirmSubmit = () => {
         setShowSubmitModal(false);
+
+        // SPEED WARNING LOGIC
+        const attemptedCount = Object.keys(mcqState).length;
+        const averageTime = attemptedCount > 0 ? sessionTime / attemptedCount : 0;
+
+        if (attemptedCount > 0 && averageTime < 5) {
+             setAlertConfig({
+                 isOpen: true,
+                 title: "Warning: Rushed Attempt",
+                 message: "It seems you finished too fast. Try to read questions carefully next time!",
+                 onClose: () => {
+                     setAlertConfig(prev => ({...prev, isOpen: false}));
+                     finishSubmission(); // Proceed after warning
+                 }
+             });
+             return; // Stop here, wait for alert close
+        }
+
+        finishSubmission();
+    };
+
+    const finishSubmission = () => {
         const key = `nst_mcq_progress_${chapter.id}`;
         storage.removeItem(key);
         
@@ -768,9 +827,13 @@ export const LessonView: React.FC<Props> = ({
           <div className="flex flex-col h-full bg-slate-50 animate-in fade-in relative mcq-container overflow-y-auto">
                <CustomAlert 
                    isOpen={alertConfig.isOpen} 
+                   title={alertConfig.title}
                    message={alertConfig.message} 
                    type="ERROR"
-                   onClose={() => setAlertConfig({...alertConfig, isOpen: false})} 
+                   onClose={() => {
+                       if (alertConfig.onClose) alertConfig.onClose();
+                       else setAlertConfig({...alertConfig, isOpen: false});
+                   }}
                />
                <CustomConfirm
                    isOpen={confirmConfig.isOpen}
@@ -883,6 +946,11 @@ export const LessonView: React.FC<Props> = ({
                            <Clock size={14} className="text-green-400 animate-pulse" />
                            {Math.floor(sessionTime / 60)}:{String(sessionTime % 60).padStart(2, '0')}
                        </div>
+
+                       {/* AUTO READ TOGGLE (MCQ) */}
+                       <button onClick={() => setAutoRead(!autoRead)} className={`p-2 rounded-lg transition-all border ${autoRead ? 'bg-blue-100 text-blue-600 border-blue-200' : 'bg-slate-100 text-slate-400 border-slate-200'}`} title="Auto Read Question">
+                            {autoRead ? <Volume2 size={16} /> : <Volume2 size={16} className="opacity-50" />}
+                       </button>
 
                        <button
                            onClick={() => setShowQuestionDrawer(true)}

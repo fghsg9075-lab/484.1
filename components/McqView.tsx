@@ -242,7 +242,10 @@ export const McqView: React.FC<Props> = ({
       const attemptsCount = answeredIndices.length; // Should match Object.keys(answers).length
       const averageTime = attemptsCount > 0 ? timeTaken / attemptsCount : 0;
       let performanceTag: PerformanceTag = 'VERY_BAD';
-      if (averageTime <= 15) performanceTag = 'EXCELLENT';
+
+      // Updated Logic: < 5s is RUSHED (Bad), 5-15s is Excellent
+      if (averageTime < 5) performanceTag = 'VERY_BAD';
+      else if (averageTime <= 15) performanceTag = 'EXCELLENT';
       else if (averageTime <= 30) performanceTag = 'GOOD';
       else if (averageTime <= 45) performanceTag = 'BAD';
 
@@ -276,6 +279,11 @@ export const McqView: React.FC<Props> = ({
       if (scorePct >= 90) perfLabel = "Excellent";
       else if (scorePct >= 75) perfLabel = "Good";
       else if (scorePct >= 50) perfLabel = "Average";
+
+      // Override if Rushed
+      if (averageTime < 5) {
+          perfLabel = "Low Confidence";
+      }
 
       // 3. Prepare Result Object
       const result: MCQResult = {

@@ -1990,6 +1990,22 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                             <div className="bg-purple-100 text-purple-600 p-2 rounded-lg"><Megaphone size={20} /></div>
                             Request Content
                         </button>
+
+                        {/* EXTERNAL APPS (Admin Configured) */}
+                        {settings?.externalApps?.map(app => (
+                            <button
+                                key={app.id}
+                                onClick={() => { handleExternalAppClick(app); setShowSidebar(false); }}
+                                className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700"
+                            >
+                                <div className="bg-cyan-100 text-cyan-600 p-2 rounded-lg">
+                                    {app.icon ? <img src={app.icon} alt="" className="w-5 h-5"/> : <Smartphone size={20} />}
+                                </div>
+                                {app.name}
+                                {app.isLocked && <Lock size={14} className="text-red-500 ml-auto" />}
+                            </button>
+                        ))}
+
                         {/* NEW: What's New / Blogger Hub */}
                         <button onClick={() => { onTabChange('CUSTOM_PAGE'); setShowSidebar(false); }} className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700 relative">
                             <div className="bg-teal-100 text-teal-600 p-2 rounded-lg"><Zap size={20} /></div>

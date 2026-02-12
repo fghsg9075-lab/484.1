@@ -9,6 +9,7 @@ import ReactMarkdown from 'react-markdown';
 import { speakText, stopSpeech, getCategorizedVoices, stripHtml } from '../utils/textToSpeech';
 import { CustomConfirm } from './CustomDialogs'; // Import CustomConfirm
 import { SpeakButton } from './SpeakButton';
+import { renderMathInHtml } from '../utils/mathUtils';
 
 interface Props {
   result: MCQResult;
@@ -712,7 +713,7 @@ export const MarksheetCard: React.FC<Props> = ({ result, user, settings, onClose
                                     <div className="flex justify-between items-start gap-2">
                                         <div
                                             className="text-sm font-bold text-slate-800 leading-snug prose prose-sm max-w-none"
-                                            dangerouslySetInnerHTML={{ __html: q.question }}
+                                            dangerouslySetInnerHTML={{ __html: renderMathInHtml(q.question) }}
                                         />
                                         <SpeakButton text={fullText} className="shrink-0" />
                                     </div>
@@ -743,7 +744,7 @@ export const MarksheetCard: React.FC<Props> = ({ result, user, settings, onClose
                                                     {String.fromCharCode(65 + optIdx)}
                                                 </div>
                                                 <div className="flex-1 flex items-center justify-between gap-2">
-                                                    <div dangerouslySetInnerHTML={{ __html: opt }} />
+                                                    <div dangerouslySetInnerHTML={{ __html: renderMathInHtml(opt) }} />
                                                 </div>
                                                 {icon}
                                             </div>
@@ -762,7 +763,7 @@ export const MarksheetCard: React.FC<Props> = ({ result, user, settings, onClose
                                     </div>
                                     <div
                                         className="text-xs text-slate-700 leading-relaxed font-medium prose prose-sm max-w-none"
-                                        dangerouslySetInnerHTML={{ __html: q.explanation }}
+                                        dangerouslySetInnerHTML={{ __html: renderMathInHtml(q.explanation) }}
                                     />
                                 </div>
                             )}
@@ -1033,7 +1034,7 @@ export const MarksheetCard: React.FC<Props> = ({ result, user, settings, onClose
                                                             </span>
                                                             <SpeakButton text={fullText} className="p-1" iconSize={14} />
                                                         </div>
-                                                        <div className="text-xs font-bold text-slate-700 mb-2" dangerouslySetInnerHTML={{__html: q.question}} />
+                                                        <div className="text-xs font-bold text-slate-700 mb-2" dangerouslySetInnerHTML={{__html: renderMathInHtml(q.question)}} />
                                                         <div className="space-y-1 mb-3">
                                                             {q.options && q.options.map((opt: string, optIdx: number) => {
                                                                 const isSelected = selected === optIdx;
@@ -1046,7 +1047,7 @@ export const MarksheetCard: React.FC<Props> = ({ result, user, settings, onClose
                                                                 return (
                                                                     <div key={optIdx} className={`px-2 py-1.5 rounded-lg border text-[10px] flex items-center gap-2 ${bg}`}>
                                                                         <span className="w-4 h-4 flex items-center justify-center rounded-full bg-black/5 text-[8px] font-bold">{String.fromCharCode(65+optIdx)}</span>
-                                                                        <div dangerouslySetInnerHTML={{__html: opt}} />
+                                                                        <div dangerouslySetInnerHTML={{__html: renderMathInHtml(opt)}} />
                                                                     </div>
                                                                 )
                                                             })}
@@ -1056,7 +1057,7 @@ export const MarksheetCard: React.FC<Props> = ({ result, user, settings, onClose
                                                         {q.explanation && (
                                                             <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 mt-2">
                                                                 <p className="text-[9px] font-bold text-blue-600 uppercase mb-1 flex items-center gap-1"><Lightbulb size={10} /> Explanation</p>
-                                                                <div className="text-[10px] text-slate-600 leading-relaxed" dangerouslySetInnerHTML={{__html: q.explanation}} />
+                                                                <div className="text-[10px] text-slate-600 leading-relaxed" dangerouslySetInnerHTML={{__html: renderMathInHtml(q.explanation)}} />
                                                             </div>
                                                         )}
                                                     </div>

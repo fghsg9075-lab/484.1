@@ -659,10 +659,39 @@ const AdminDashboardInner: React.FC<Props> = ({ onNavigate, settings, onUpdateSe
   };
 
   const updatePriceForSelection = (tier: typeof editSubscriptionTier, level: typeof editSubscriptionLevel) => {
-      if (tier !== 'FREE' && tier !== 'CUSTOM') {
+      if (tier !== 'FREE' && tier !== 'CUSTOM' && editingUser) {
           const tierPrices = subPrices[tier as keyof typeof subPrices];
           if (tierPrices) {
-              setEditSubscriptionPrice(tierPrices[level]);
+              let basePrice = tierPrices[level];
+
+              // Apply Event Discount + Renewal Bonus Logic (Consistent with Store.tsx)
+              const event = localSettings.specialDiscountEvent;
+              let discountPercentVal = 0;
+              const isSubscribed = editingUser.isPremium && editingUser.subscriptionEndDate && new Date(editingUser.subscriptionEndDate) > new Date();
+
+              // 1. Check Event Validity
+              let isEventActive = false;
+              if (event?.enabled && event.startsAt && event.endsAt) {
+                  const now = Date.now();
+                  isEventActive = now >= new Date(event.startsAt).getTime() && now < new Date(event.endsAt).getTime();
+              }
+
+              if (isEventActive) {
+                  if ((isSubscribed && event?.showToPremiumUsers) || (!isSubscribed && event?.showToFreeUsers)) {
+                      discountPercentVal += (event?.discountPercent || 0);
+                  }
+              }
+
+              // 2. Renewal Bonus (Check Premium or History)
+              if (editingUser.isPremium || (editingUser.subscriptionHistory && editingUser.subscriptionHistory.length > 0)) {
+                  discountPercentVal += 5;
+              }
+
+              if (discountPercentVal > 0) {
+                  basePrice = Math.round(basePrice * (1 - discountPercentVal / 100));
+              }
+
+              setEditSubscriptionPrice(basePrice);
           }
       } else if (tier === 'CUSTOM') {
           setEditSubscriptionPrice(0);

@@ -101,13 +101,34 @@ export const Store: React.FC<Props> = ({ user, settings }) => {
       
       const isSub = purchaseItem.duration !== undefined; // Detect if Sub Plan
       const itemName = purchaseItem.name;
-      const price = isSub 
-          ? (tierType === 'BASIC' ? purchaseItem.basicPrice : purchaseItem.ultraPrice)
-          : purchaseItem.price;
       
-      const features = isSub 
-          ? (tierType === 'BASIC' ? 'MCQ + Notes (Pro)' : 'PDF + Videos + AI Studio (Max)')
-          : `${purchaseItem.credits} Credits`;
+      // FIX: Use the discounted price that was passed to purchaseItem (e.g. from initiatePurchase)
+      // purchaseItem already contains the modified 'price' if it was a CreditPackage.
+      // For plans, we need to pass the *final* calculated price.
+      // If purchaseItem has a 'finalPrice' prop (custom), use it. Otherwise fallback to standard logic.
+
+      let price = 0;
+      let features = '';
+
+      if (isSub) {
+          // If it's a plan, we expect 'purchaseItem' to have the correct discounted price attached
+          // OR we re-calculate it here using the same logic.
+          // Better: We will modify initiatePurchase to attach 'finalPrice' for plans.
+          // Assuming 'purchaseItem' now has 'finalPrice' if we passed it correctly.
+          // Let's rely on 'purchaseItem.price' if set, otherwise calculate.
+
+          if (purchaseItem.finalPrice !== undefined) {
+              price = purchaseItem.finalPrice;
+          } else {
+              // Fallback (Should be avoided by updating initiatePurchase call)
+              price = tierType === 'BASIC' ? purchaseItem.basicPrice : purchaseItem.ultraPrice;
+          }
+          features = tierType === 'BASIC' ? 'MCQ + Notes (Pro)' : 'PDF + Videos + AI Studio (Max)';
+      } else {
+          // Credits
+          price = purchaseItem.price;
+          features = `${purchaseItem.credits} Credits`;
+      }
 
       // Record Activity
       if (typeof (window as any).recordActivity === 'function') {
@@ -417,7 +438,26 @@ export const Store: React.FC<Props> = ({ user, settings }) => {
 
           {/* ACTION BUTTON */}
           <button
-                 onClick={() => selectedPlan && initiatePurchase(selectedPlan)}
+                 onClick={() => {
+                     if (!selectedPlan) return;
+                     // Calculate Final Price again to pass to Modal
+                     let finalPrice = tierType === 'BASIC' ? selectedPlan.basicPrice : selectedPlan.ultraPrice;
+                     let discountPercentVal = 0;
+                     if (activeEvent) {
+                         if ((isSubscribed && event?.showToPremiumUsers) || (!isSubscribed && event?.showToFreeUsers)) {
+                             discountPercentVal += (event?.discountPercent || 0);
+                         }
+                     }
+                     if (user.isPremium || (user.subscriptionHistory && user.subscriptionHistory.length > 0)) {
+                         discountPercentVal += 5;
+                     }
+                     if (discountPercentVal > 0) {
+                         finalPrice = Math.round(finalPrice * (1 - discountPercentVal / 100));
+                     }
+
+                     // Pass 'finalPrice' explicitly
+                     initiatePurchase({ ...selectedPlan, finalPrice: finalPrice });
+                 }}
                  className={`w-full py-4 rounded-full font-bold text-sm tracking-wide shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] ${
                      tierType === 'BASIC' 
                         ? 'bg-cyan-500 text-black hover:bg-cyan-400 shadow-cyan-500/20' 

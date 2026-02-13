@@ -2021,7 +2021,7 @@ const App: React.FC = () => {
       )}
       
       {/* FLOATING DOCK */}
-      {state.user && !activeWeeklyTest && (!isFullScreen || (state.view === 'STUDENT_DASHBOARD' && ['HOME', 'PROFILE', 'EXPLORE', 'AI_STUDIO'].includes(studentTab))) && (
+      {state.user && !activeWeeklyTest && (state.view === 'STUDENT_DASHBOARD' && !['VIDEO', 'PDF', 'MCQ', 'AUDIO'].includes(studentTab)) && (
           <FloatingDock 
             onTabSelect={setStudentTab} 
             onGoHome={goHome} 

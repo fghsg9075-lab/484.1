@@ -973,12 +973,22 @@ export const generateStudyRoadmap = async (user: User, subjects: Subject[], mode
     // 1. Analyze History
     const mcqHistory = user.mcqHistory || [];
     const usageHistory = user.usageHistory || [];
+    const excludedTopics = user.excludedTopics || [];
 
     // Identify Weak Topics (Score < 50%)
-    const weakTopics = mcqHistory
+    const allWeakTopics = mcqHistory
         .filter(h => (h.score / h.total) < 0.5)
-        .map(h => `${h.chapterTitle} (${h.subjectName})`)
-        .slice(0, 5); // Top 5 weak areas
+        .map(h => `${h.chapterTitle} (${h.subjectName})`);
+
+    // Filter out excluded ones
+    const activeWeakTopics = allWeakTopics.filter(t => !excludedTopics.some(e => t.includes(e)));
+    const weakTopicsList = activeWeakTopics.slice(0, 5);
+
+    // Identify Strong Topics (Score > 80%)
+    const strongTopicsList = mcqHistory
+        .filter(h => (h.score / h.total) > 0.8)
+        .map(h => `${h.chapterTitle}`)
+        .slice(0, 5);
 
     // Identify Recently Studied (to skip immediate repetition unless weak)
     const recentActivity = usageHistory
@@ -988,18 +998,21 @@ export const generateStudyRoadmap = async (user: User, subjects: Subject[], mode
     const prompt = `
     You are an expert AI Study Planner.
     User Context:
+    - Name: ${user.name}
     - Class: ${user.classLevel || '10'}
     - Board: ${user.board || 'CBSE'}
-    - Weak Topics: ${weakTopics.join(', ') || "None recorded yet"}
+    - Weak Topics: ${weakTopicsList.join(', ') || "None recorded yet"}
     - Recently Studied: ${recentActivity.join(', ') || "None"}
+    - EXCLUDED TOPICS (DO NOT SUGGEST): ${excludedTopics.join(', ') || "None"}
 
     TASK:
-    Create a personalized "Today's Goal" roadmap for this student.
+    Create a personalized "Today's Goal" roadmap.
     Rules:
     1. If they have Weak Topics, prioritize 1-2 of them for revision.
     2. Suggest 1 NEW topic to start (Next logical step).
     3. Suggest 1 MCQ test to take.
-    4. Avoid topics studied very recently unless they are weak.
+    4. NEVER suggest topics from the EXCLUDED TOPICS list.
+    5. Generate a conversational "aiMessage" addressing the student as "Sir/Madam" (e.g., "Sir, you haven't studied [Weak Topic] yet...").
 
     OUTPUT FORMAT (STRICT JSON):
     {
@@ -1012,7 +1025,14 @@ export const generateStudyRoadmap = async (user: User, subjects: Subject[], mode
           "reason": "Why this task? (e.g. 'You scored low last time' or 'Start new topic')"
         }
       ],
-      "motivation": "A short, punchy 1-line motivation for today."
+      "motivation": "A short, punchy 1-line motivation for today.",
+      "aiMessage": "Conversational message regarding their weak areas or progress.",
+      "aiInsights": {
+          "weakTopics": ["Topic 1", "Topic 2"],
+          "strongTopics": ["Topic A"],
+          "syllabusProgress": 45, // Estimate based on history count vs 100 chapters
+          "studyGapDays": 0 // 0 if studied today
+      }
     }
 
     Generate 3-4 tasks maximum.

@@ -132,6 +132,19 @@ export interface User {
   dailySpinCount?: number; // Number of spins used today
   dailyAiDate?: string; // NEW: Track AI usage date
   dailyAiCount?: number; // NEW: Track AI usage count
+  dailyRoadmap?: {
+      date: string;
+      tasks: { id: string, type: 'READ' | 'MCQ', title: string, subject: string, reason: string }[];
+      motivation: string;
+      aiMessage?: string; // Conversational "Sir..." message
+      aiInsights?: { // What Groq saw
+          weakTopics: string[];
+          strongTopics: string[];
+          syllabusProgress: number;
+          studyGapDays: number;
+      };
+  };
+  excludedTopics?: string[]; // Topics user deleted from plan (not in syllabus)
   lastRewardClaimDate?: string; // To track daily 3-hour study reward
   lastLoginRewardDate?: string; // NEW: Daily Login Bonus (10 coins)
   

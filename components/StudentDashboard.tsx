@@ -1351,6 +1351,8 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
             </div>
         )}
 
+        {renderMainContent()}
+
         {/* AI NOTES MODAL */}
         {showAiModal && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in">
@@ -1574,26 +1576,11 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                                                 <p className="text-[10px] text-slate-400">{task.subject}</p>
                                             </div>
                                         </div>
-                                        <button
-                                            onClick={() => handleDeleteTask(task.id, task.title)}
-                                            className="text-slate-300 hover:text-red-500 p-1"
-                                        >
-                                            <X size={14} />
-                                        </button>
                                     </div>
                                     <div className="flex gap-2">
                                         <div className="flex-1 bg-white px-2 py-1 rounded border border-slate-100 text-[9px] text-slate-500">
                                             {task.reason}
                                         </div>
-                                        <button
-                                            onClick={() => {
-                                                setShowGoalPopup(false);
-                                                onTabChange(task.type === 'MCQ' ? 'MCQ' : 'PDF');
-                                            }}
-                                            className="px-4 py-1 bg-slate-800 text-white text-[10px] font-bold rounded-lg hover:bg-black"
-                                        >
-                                            Start
-                                        </button>
                                     </div>
                                 </div>
                             ))}

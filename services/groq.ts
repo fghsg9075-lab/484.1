@@ -1006,23 +1006,23 @@ export const generateStudyRoadmap = async (user: User, subjects: Subject[], mode
     - EXCLUDED TOPICS (DO NOT SUGGEST): ${excludedTopics.join(', ') || "None"}
 
     TASK:
-    Create a personalized "Today's Goal" roadmap.
+    Create a personalized "Today's Goal" list focused on IMPROVING WEAK AREAS.
     Rules:
-    1. If they have Weak Topics, prioritize 1-2 of them for revision.
-    2. Suggest 1 NEW topic to start (Next logical step).
-    3. Suggest 1 MCQ test to take.
+    1. LIST ALL WEAK TOPICS found in the context (up to 5).
+    2. If fewer than 3 weak topics, suggest 1-2 important topics for revision.
+    3. DO NOT Suggest new topics unless they have no history. Focus on fixing mistakes.
     4. NEVER suggest topics from the EXCLUDED TOPICS list.
-    5. Generate a conversational "aiMessage" addressing the student as "Sir/Madam" (e.g., "Sir, you haven't studied [Weak Topic] yet...").
+    5. Generate a conversational "aiMessage" addressing the student as "Sir/Madam" (e.g., "Sir, you need to focus on these weak topics...").
 
     OUTPUT FORMAT (STRICT JSON):
     {
       "tasks": [
         {
           "id": "task-1",
-          "type": "READ" | "MCQ",
+          "type": "READ",
           "title": "Chapter Name",
           "subject": "Subject Name",
-          "reason": "Why this task? (e.g. 'You scored low last time' or 'Start new topic')"
+          "reason": "Weakness detected (Score < 50%)"
         }
       ],
       "motivation": "A short, punchy 1-line motivation for today.",

@@ -212,6 +212,21 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showLogoutTimer, setShowLogoutTimer] = useState(false);
   const [logoutTimer, setLogoutTimer] = useState(15);
+  const [isRoadmapHidden, setIsRoadmapHidden] = useState(false);
+
+  const handleDeleteTask = (taskId: string, topicTitle: string) => {
+      if(!confirm("Remove this topic? Groq will learn not to suggest it again.")) return;
+
+      const newTasks = user.dailyRoadmap?.tasks.filter(t => t.id !== taskId) || [];
+      const newExcluded = [...(user.excludedTopics || []), topicTitle];
+
+      const updatedUser = {
+          ...user,
+          dailyRoadmap: { ...user.dailyRoadmap!, tasks: newTasks },
+          excludedTopics: newExcluded
+      };
+      handleUserUpdate(updatedUser);
+  };
 
   // --- APP GREETING (DAILY CHECK-IN) ---
   useEffect(() => {
@@ -1101,52 +1116,6 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                     />
                 </DashboardSectionWrapper>
 
-                {/* AI ROADMAP DISPLAY (If Enabled and Available) */}
-                {settings?.isAiRoadmapEnabled && user.dailyRoadmap && user.dailyRoadmap.date === new Date().toDateString() && (
-                    <DashboardSectionWrapper id="section_roadmap" label="Today's Plan" settings={settings} isLayoutEditing={isLayoutEditing} onToggleVisibility={toggleLayoutVisibility}>
-                        <div className="bg-gradient-to-r from-violet-600 to-indigo-600 p-6 rounded-3xl shadow-lg shadow-indigo-200 text-white relative overflow-hidden mb-4">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
-
-                            <div className="relative z-10">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                        <h3 className="font-black text-lg flex items-center gap-2">
-                                            <Compass size={20} className="text-yellow-300" /> Today's Goal
-                                        </h3>
-                                        <p className="text-xs text-indigo-100 italic">"{user.dailyRoadmap.motivation}"</p>
-                                    </div>
-                                    <span className="bg-white/20 text-xs font-bold px-3 py-1 rounded-full">{user.dailyRoadmap.tasks.length} Tasks</span>
-                                </div>
-
-                                <div className="space-y-3">
-                                    {user.dailyRoadmap.tasks.map((task, idx) => (
-                                        <div key={idx} className="bg-white/10 p-3 rounded-xl border border-white/10 flex items-center gap-3 backdrop-blur-sm">
-                                            <div className={`p-2 rounded-full ${task.type === 'MCQ' ? 'bg-pink-500' : 'bg-blue-500'}`}>
-                                                {task.type === 'MCQ' ? <CheckSquare size={14} /> : <BookOpen size={14} />}
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="font-bold text-sm">{task.title}</p>
-                                                <p className="text-[10px] text-indigo-200">{task.subject} • {task.reason}</p>
-                                            </div>
-                                            <button
-                                                onClick={() => {
-                                                    // Auto-Navigate to Content
-                                                    onTabChange(task.type === 'MCQ' ? 'MCQ' : 'PDF');
-                                                    // In a real app, we would deep link to the chapter.
-                                                    // For now, we switch tabs to guide them.
-                                                }}
-                                                className="bg-white text-indigo-600 text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-indigo-50"
-                                            >
-                                                Start
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </DashboardSectionWrapper>
-                )}
-
                 {/* STUDY TIMER */}
                 <DashboardSectionWrapper id="section_timer" label="Study Goal" settings={settings} isLayoutEditing={isLayoutEditing} onToggleVisibility={toggleLayoutVisibility}>
                     <StudyGoalTimer
@@ -1161,7 +1130,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
 
                 {/* MAIN ACTION BUTTONS */}
                 <DashboardSectionWrapper id="section_main_actions" label="Main Actions" settings={settings} isLayoutEditing={isLayoutEditing} onToggleVisibility={toggleLayoutVisibility}>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4 mb-4">
                         <button
                             onClick={() => { onTabChange('COURSES'); setContentViewStep('SUBJECTS'); }}
                             className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-3xl shadow-lg shadow-blue-200 flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all relative overflow-hidden h-32"
@@ -1180,6 +1149,90 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                         </button>
                     </div>
                 </DashboardSectionWrapper>
+
+                {/* UNIVERSAL VIDEO & ROADMAP ROW */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                    {/* UNIVERSAL VIDEO BUTTON */}
+                    <button
+                        onClick={() => {
+                            if (settings?.universalVideoConfig?.enabled && settings?.universalVideoConfig?.url) {
+                                setActiveExternalApp(settings.universalVideoConfig.url);
+                            } else {
+                                // If no URL configured or just general button, maybe open a list?
+                                // Requirement: "universal videos jitna ho sab ka list aajayega"
+                                // We'll open the 'UNIVERSAL_PLAYLIST' view logic.
+                                // For now, let's switch to a dedicated tab or open modal.
+                                // We'll add a temporary tab 'UNIVERSAL_LIST' handling.
+                                onTabChange('UPDATES'); // Reusing UPDATES or similar for list view if applicable, or we create one.
+                                // Actually, let's create a local state or use 'UNIVERSAL_INFO' page.
+                                // Let's interpret 'UPDATES' tab as the place for universal content for now or add a new one.
+                                // But the prompt says "universal videos play karna ka button".
+                                // Let's use `onTabChange('UPDATES')` and ensure `UniversalInfoPage` shows the list.
+                            }
+                        }}
+                        className="bg-rose-50 border-2 border-rose-100 p-4 rounded-3xl shadow-sm flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all hover:border-rose-300 h-40"
+                    >
+                        <div className="p-3 bg-rose-100 text-rose-600 rounded-full group-hover:scale-110 transition-transform">
+                            <Youtube size={24} />
+                        </div>
+                        <span className="font-black text-rose-700 text-sm tracking-wide uppercase text-center">
+                            {settings?.universalVideoConfig?.buttonLabel || "Universal Videos"}
+                        </span>
+                    </button>
+
+                    {/* TODAY'S GOAL MINI CARD */}
+                    {settings?.isAiRoadmapEnabled && user.dailyRoadmap && user.dailyRoadmap.date === new Date().toDateString() ? (
+                        <div className="bg-white border-2 border-slate-100 p-4 rounded-3xl shadow-sm flex flex-col h-40 relative overflow-hidden group">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-1.5 bg-violet-100 text-violet-600 rounded-full">
+                                        <Compass size={14} />
+                                    </div>
+                                    <span className="font-black text-slate-700 text-xs uppercase">Today's Goal</span>
+                                </div>
+                                <span className="text-[10px] font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-500">
+                                    {user.dailyRoadmap.tasks.length}
+                                </span>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto pr-1 space-y-2">
+                                {user.dailyRoadmap.tasks.length > 0 ? (
+                                    user.dailyRoadmap.tasks.map((task) => (
+                                        <div key={task.id} className="flex items-center gap-2 group/task">
+                                            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${task.type === 'MCQ' ? 'bg-pink-500' : 'bg-blue-500'}`} />
+                                            <p className="text-[10px] font-bold text-slate-600 truncate flex-1">{task.title}</p>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id, task.title); }}
+                                                className="text-slate-300 hover:text-red-500 opacity-0 group-hover/task:opacity-100 transition-opacity"
+                                            >
+                                                <X size={10} />
+                                            </button>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                                        <CheckCircle size={24} className="mb-1 text-green-400" />
+                                        <span className="text-[10px] font-bold">All Done!</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {user.dailyRoadmap.tasks.length > 0 && (
+                                <button
+                                    onClick={() => onTabChange(user.dailyRoadmap!.tasks[0].type === 'MCQ' ? 'MCQ' : 'PDF')}
+                                    className="mt-2 w-full bg-slate-800 text-white text-[10px] font-bold py-2 rounded-xl hover:bg-black transition-colors"
+                                >
+                                    Start Now
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="bg-slate-50 border-2 border-dashed border-slate-200 p-4 rounded-3xl flex flex-col items-center justify-center h-40 text-center gap-2">
+                            <Bot size={24} className="text-slate-300" />
+                            <p className="text-xs font-bold text-slate-400">No active plan.</p>
+                        </div>
+                    )}
+                </div>
               </div>
           );
       }
@@ -1262,6 +1315,49 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                             showArrows={false}
                         />
                   </div>
+
+                  {/* AI DATA INSIGHTS (Transparency View) */}
+                  {settings?.isAiRoadmapEnabled && user.dailyRoadmap?.aiInsights && (
+                      <div className="bg-slate-900 p-5 rounded-3xl text-white shadow-lg mb-6 border border-slate-800 relative overflow-hidden">
+                          <div className="absolute top-0 right-0 p-4 opacity-10">
+                              <BrainCircuit size={64} />
+                          </div>
+                          <h3 className="font-bold flex items-center gap-2 mb-4">
+                              <Bot className="text-green-400" size={20} />
+                              What Groq AI Sees
+                          </h3>
+
+                          <div className="grid grid-cols-2 gap-4 text-xs">
+                              <div className="bg-white/10 p-3 rounded-xl border border-white/10">
+                                  <p className="text-red-300 font-bold mb-1 uppercase tracking-wider">Weak Areas</p>
+                                  {user.dailyRoadmap.aiInsights.weakTopics.length > 0 ? (
+                                      <ul className="list-disc pl-4 space-y-1 text-slate-300">
+                                          {user.dailyRoadmap.aiInsights.weakTopics.map((t, i) => <li key={i}>{t}</li>)}
+                                      </ul>
+                                  ) : <p className="text-slate-500 italic">None detected</p>}
+                              </div>
+                              <div className="bg-white/10 p-3 rounded-xl border border-white/10">
+                                  <p className="text-green-300 font-bold mb-1 uppercase tracking-wider">Strong Areas</p>
+                                  {user.dailyRoadmap.aiInsights.strongTopics.length > 0 ? (
+                                      <ul className="list-disc pl-4 space-y-1 text-slate-300">
+                                          {user.dailyRoadmap.aiInsights.strongTopics.map((t, i) => <li key={i}>{t}</li>)}
+                                      </ul>
+                                  ) : <p className="text-slate-500 italic">Keep studying!</p>}
+                              </div>
+                          </div>
+
+                          <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center text-xs">
+                              <div>
+                                  <p className="text-slate-400">Syllabus Progress</p>
+                                  <p className="font-mono font-bold text-yellow-400">{user.dailyRoadmap.aiInsights.syllabusProgress}% Covered</p>
+                              </div>
+                              <div className="text-right">
+                                  <p className="text-slate-400">Study Gap</p>
+                                  <p className="font-mono font-bold text-blue-400">{user.dailyRoadmap.aiInsights.studyGapDays} Days</p>
+                              </div>
+                          </div>
+                      </div>
+                  )}
 
                   {/* AI TOOLS */}
                   <div className="grid gap-4">

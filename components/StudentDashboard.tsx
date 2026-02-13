@@ -218,7 +218,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
   const handleDeleteTask = (taskId: string, topicTitle: string) => {
       if(!confirm("Remove this topic? Groq will learn not to suggest it again.")) return;
 
-      const newTasks = user.dailyRoadmap?.tasks.filter(t => t.id !== taskId) || [];
+      const newTasks = user.dailyRoadmap?.tasks?.filter(t => t.id !== taskId) || [];
       const newExcluded = [...(user.excludedTopics || []), topicTitle];
 
       const updatedUser = {
@@ -1562,7 +1562,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                         )}
 
                         <div className="space-y-2">
-                            {user.dailyRoadmap.tasks.map((task, idx) => (
+                            {user.dailyRoadmap.tasks?.map((task, idx) => (
                                 <div key={task.id} className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col gap-2">
                                     <div className="flex justify-between items-start gap-2">
                                         <div className="flex items-center gap-2">
@@ -1597,7 +1597,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                                     </div>
                                 </div>
                             ))}
-                            {user.dailyRoadmap.tasks.length === 0 && (
+                            {(user.dailyRoadmap.tasks?.length || 0) === 0 && (
                                 <div className="text-center py-8 text-slate-400">
                                     <CheckCircle size={48} className="mx-auto mb-2 text-green-400" />
                                     <p className="font-bold">All tasks completed!</p>

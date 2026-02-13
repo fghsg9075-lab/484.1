@@ -213,6 +213,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
   const [showLogoutTimer, setShowLogoutTimer] = useState(false);
   const [logoutTimer, setLogoutTimer] = useState(15);
   const [isRoadmapHidden, setIsRoadmapHidden] = useState(false);
+  const [showGoalPopup, setShowGoalPopup] = useState(false); // NEW: Goal Popup State
 
   const handleDeleteTask = (taskId: string, topicTitle: string) => {
       if(!confirm("Remove this topic? Groq will learn not to suggest it again.")) return;
@@ -244,7 +245,7 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                   if (roadmap) {
                       const updatedUser = {
                           ...user,
-                          dailyRoadmap: { date: today, tasks: roadmap.tasks, motivation: roadmap.motivation }
+                          dailyRoadmap: { date: today, tasks: roadmap.tasks, motivation: roadmap.motivation, aiMessage: roadmap.aiMessage, aiInsights: roadmap.aiInsights }
                       };
                       handleUserUpdate(updatedUser);
                       localStorage.setItem(roadmapKey, 'true');
@@ -1150,403 +1151,16 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                     </div>
                 </DashboardSectionWrapper>
 
-                {/* UNIVERSAL VIDEO & ROADMAP ROW */}
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                    {/* UNIVERSAL VIDEO BUTTON */}
-                    <button
-                        onClick={() => {
-                            if (settings?.universalVideoConfig?.enabled && settings?.universalVideoConfig?.url) {
-                                setActiveExternalApp(settings.universalVideoConfig.url);
-                            } else {
-                                // If no URL configured or just general button, maybe open a list?
-                                // Requirement: "universal videos jitna ho sab ka list aajayega"
-                                // We'll open the 'UNIVERSAL_PLAYLIST' view logic.
-                                // For now, let's switch to a dedicated tab or open modal.
-                                // We'll add a temporary tab 'UNIVERSAL_LIST' handling.
-                                onTabChange('UPDATES'); // Reusing UPDATES or similar for list view if applicable, or we create one.
-                                // Actually, let's create a local state or use 'UNIVERSAL_INFO' page.
-                                // Let's interpret 'UPDATES' tab as the place for universal content for now or add a new one.
-                                // But the prompt says "universal videos play karna ka button".
-                                // Let's use `onTabChange('UPDATES')` and ensure `UniversalInfoPage` shows the list.
-                            }
-                        }}
-                        className="bg-rose-50 border-2 border-rose-100 p-4 rounded-3xl shadow-sm flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all hover:border-rose-300 h-40"
-                    >
-                        <div className="p-3 bg-rose-100 text-rose-600 rounded-full group-hover:scale-110 transition-transform">
-                            <Youtube size={24} />
-                        </div>
-                        <span className="font-black text-rose-700 text-sm tracking-wide uppercase text-center">
-                            {settings?.universalVideoConfig?.buttonLabel || "Universal Videos"}
-                        </span>
-                    </button>
-
-                    {/* TODAY'S GOAL MINI CARD */}
-                    {settings?.isAiRoadmapEnabled && user.dailyRoadmap && user.dailyRoadmap.date === new Date().toDateString() ? (
-                        <div className="bg-white border-2 border-slate-100 p-4 rounded-3xl shadow-sm flex flex-col h-40 relative overflow-hidden group">
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                    <div className="p-1.5 bg-violet-100 text-violet-600 rounded-full">
-                                        <Compass size={14} />
-                                    </div>
-                                    <span className="font-black text-slate-700 text-xs uppercase">Today's Goal</span>
-                                </div>
-                                <span className="text-[10px] font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-500">
-                                    {user.dailyRoadmap.tasks.length}
-                                </span>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto pr-1 space-y-2">
-                                {user.dailyRoadmap.tasks.length > 0 ? (
-                                    user.dailyRoadmap.tasks.map((task) => (
-                                        <div key={task.id} className="flex items-center gap-2 group/task">
-                                            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${task.type === 'MCQ' ? 'bg-pink-500' : 'bg-blue-500'}`} />
-                                            <p className="text-[10px] font-bold text-slate-600 truncate flex-1">{task.title}</p>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id, task.title); }}
-                                                className="text-slate-300 hover:text-red-500 opacity-0 group-hover/task:opacity-100 transition-opacity"
-                                            >
-                                                <X size={10} />
-                                            </button>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                                        <CheckCircle size={24} className="mb-1 text-green-400" />
-                                        <span className="text-[10px] font-bold">All Done!</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {user.dailyRoadmap.tasks.length > 0 && (
-                                <button
-                                    onClick={() => onTabChange(user.dailyRoadmap!.tasks[0].type === 'MCQ' ? 'MCQ' : 'PDF')}
-                                    className="mt-2 w-full bg-slate-800 text-white text-[10px] font-bold py-2 rounded-xl hover:bg-black transition-colors"
-                                >
-                                    Start Now
-                                </button>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="bg-slate-50 border-2 border-dashed border-slate-200 p-4 rounded-3xl flex flex-col items-center justify-center h-40 text-center gap-2">
-                            <Bot size={24} className="text-slate-300" />
-                            <p className="text-xs font-bold text-slate-400">No active plan.</p>
-                        </div>
-                    )}
-                </div>
               </div>
           );
-      }
-
-      // 2. AI STUDIO TAB
-      if (activeTab === 'AI_STUDIO') {
-          return (
-              <div className="space-y-6 pb-24 p-4">
-                  <div className="flex items-center justify-between mb-2">
-                      <h2 className="text-2xl font-black text-slate-800">AI Studio</h2>
-                      <div className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold">
-                          Beta
-                      </div>
-                  </div>
-
-                  {/* BANNERS */}
-                  <div className="h-48 rounded-2xl overflow-hidden shadow-lg relative border-2 border-slate-900 mb-6">
-                        <BannerCarousel
-                            onBannerClick={(link) => {
-                                if (['STORE', 'CUSTOM_PAGE', 'VIDEO', 'PDF', 'MCQ', 'AUDIO', 'AI_CHAT'].includes(link)) {
-                                    onTabChange(link as any);
-                                } else if (link.startsWith('http')) {
-                                    window.open(link, '_blank');
-                                }
-                            }}
-                            slides={[
-                                {
-                                    id: 'premium_access',
-                                    image: 'https://img.freepik.com/free-vector/gradient-technological-background_23-2148884155.jpg',
-                                    title: 'Get Premium Access',
-                                    subtitle: 'Unlock All Features Now',
-                                    link: 'STORE'
-                                },
-                                {
-                                    id: 'premium_pdf',
-                                    image: 'https://img.freepik.com/free-vector/online-document-concept-illustration_114360-5453.jpg',
-                                    title: 'Premium PDFs',
-                                    subtitle: 'High Quality Notes Library',
-                                    link: 'STORE'
-                                },
-                                {
-                                    id: 'premium_mcq',
-                                    image: 'https://img.freepik.com/free-vector/checklist-concept-illustration_114360-479.jpg',
-                                    title: 'Premium MCQ Tests',
-                                    subtitle: 'Practice & Master Topics',
-                                    link: 'STORE'
-                                },
-                                {
-                                    id: 'premium_video',
-                                    image: 'https://img.freepik.com/free-vector/online-tutorials-concept_52683-37480.jpg',
-                                    title: 'Premium Video Lectures',
-                                    subtitle: 'Learn from Experts',
-                                    link: 'STORE'
-                                },
-                                {
-                                    id: 'premium_audio',
-                                    image: 'https://img.freepik.com/free-vector/podcast-concept-illustration_114360-1068.jpg',
-                                    title: 'Premium Audiobooks',
-                                    subtitle: 'Listen & Learn Anywhere',
-                                    link: 'STORE'
-                                },
-                                {
-                                    id: 'ai_tutor',
-                                    image: 'https://img.freepik.com/free-vector/chat-bot-concept-illustration_114360-5522.jpg',
-                                    title: 'AI Personal Tutor',
-                                    subtitle: 'Instant Doubt Solving',
-                                    link: 'AI_CHAT'
-                                },
-                                {
-                                    id: 'blogger_hub',
-                                    image: 'https://img.freepik.com/free-vector/blogging-concept-illustration_114360-1038.jpg',
-                                    title: "What's Update",
-                                    subtitle: 'Blogger Hub',
-                                    link: 'CUSTOM_PAGE'
-                                }
-                            ]}
-                            interval={3000}
-                            autoPlay={true}
-                            showDots={true}
-                            showArrows={false}
-                        />
-                  </div>
-
-                  {/* AI DATA INSIGHTS (Transparency View) */}
-                  {settings?.isAiRoadmapEnabled && user.dailyRoadmap?.aiInsights && (
-                      <div className="bg-slate-900 p-5 rounded-3xl text-white shadow-lg mb-6 border border-slate-800 relative overflow-hidden">
-                          <div className="absolute top-0 right-0 p-4 opacity-10">
-                              <BrainCircuit size={64} />
-                          </div>
-                          <h3 className="font-bold flex items-center gap-2 mb-4">
-                              <Bot className="text-green-400" size={20} />
-                              What Groq AI Sees
-                          </h3>
-
-                          <div className="grid grid-cols-2 gap-4 text-xs">
-                              <div className="bg-white/10 p-3 rounded-xl border border-white/10">
-                                  <p className="text-red-300 font-bold mb-1 uppercase tracking-wider">Weak Areas</p>
-                                  {user.dailyRoadmap.aiInsights.weakTopics.length > 0 ? (
-                                      <ul className="list-disc pl-4 space-y-1 text-slate-300">
-                                          {user.dailyRoadmap.aiInsights.weakTopics.map((t, i) => <li key={i}>{t}</li>)}
-                                      </ul>
-                                  ) : <p className="text-slate-500 italic">None detected</p>}
-                              </div>
-                              <div className="bg-white/10 p-3 rounded-xl border border-white/10">
-                                  <p className="text-green-300 font-bold mb-1 uppercase tracking-wider">Strong Areas</p>
-                                  {user.dailyRoadmap.aiInsights.strongTopics.length > 0 ? (
-                                      <ul className="list-disc pl-4 space-y-1 text-slate-300">
-                                          {user.dailyRoadmap.aiInsights.strongTopics.map((t, i) => <li key={i}>{t}</li>)}
-                                      </ul>
-                                  ) : <p className="text-slate-500 italic">Keep studying!</p>}
-                              </div>
-                          </div>
-
-                          <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center text-xs">
-                              <div>
-                                  <p className="text-slate-400">Syllabus Progress</p>
-                                  <p className="font-mono font-bold text-yellow-400">{user.dailyRoadmap.aiInsights.syllabusProgress}% Covered</p>
-                              </div>
-                              <div className="text-right">
-                                  <p className="text-slate-400">Study Gap</p>
-                                  <p className="font-mono font-bold text-blue-400">{user.dailyRoadmap.aiInsights.studyGapDays} Days</p>
-                              </div>
-                          </div>
-                      </div>
-                  )}
-
-                  {/* AI TOOLS */}
-                  <div className="grid gap-4">
-                      <button
-                          onClick={() => onTabChange('AI_CHAT')}
-                          className="bg-white p-6 rounded-3xl shadow-sm border border-indigo-100 flex items-center gap-4 hover:shadow-md transition-all group"
-                      >
-                          <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
-                              <Bot size={32} />
-                          </div>
-                          <div className="text-left">
-                              <h3 className="text-lg font-black text-slate-800">AI Tutor</h3>
-                              <p className="text-xs text-slate-500">Voice & Chat Interactive Learning</p>
-                          </div>
-                          <div className="ml-auto bg-indigo-50 p-2 rounded-full text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                              <ArrowRight size={20} />
-                          </div>
-                      </button>
-
-                      <button
-                          onClick={() => setShowAiModal(true)}
-                          className="bg-white p-6 rounded-3xl shadow-sm border border-purple-100 flex items-center gap-4 hover:shadow-md transition-all group"
-                      >
-                          <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
-                              <BrainCircuit size={32} />
-                          </div>
-                          <div className="text-left">
-                              <h3 className="text-lg font-black text-slate-800">AI Agent</h3>
-                              <p className="text-xs text-slate-500">Instant Notes & Doubt Solver</p>
-                          </div>
-                          <div className="ml-auto bg-purple-50 p-2 rounded-full text-purple-400 group-hover:bg-purple-600 group-hover:text-white transition-colors">
-                              <ArrowRight size={20} />
-                          </div>
-                      </button>
-                  </div>
-
-                  {/* DISCOUNT BANNER (Waiting or Active) */}
-                  {showDiscountBanner && (
-                      <div className={`p-6 rounded-3xl relative overflow-hidden shadow-lg border-2 animate-in slide-in-from-bottom-4 transition-all ${
-                          discountStatus === 'WAITING'
-                              ? 'bg-slate-900 border-slate-800'
-                              : 'bg-gradient-to-r from-red-600 to-rose-600 border-red-500'
-                      }`}>
-                          {/* Background Glow */}
-                          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 blur-3xl rounded-full animate-pulse"></div>
-
-                          <div className="relative z-10 flex flex-col gap-4">
-                              <div className="flex items-start justify-between">
-                                  <div>
-                                      <div className="flex items-center gap-2 mb-2">
-                                          <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded shadow-sm ${
-                                              discountStatus === 'WAITING' ? 'bg-yellow-400 text-black animate-pulse' : 'bg-white text-red-600'
-                                          }`}>
-                                              {discountStatus === 'WAITING' ? 'COMING SOON' : 'LIVE NOW'}
-                                          </span>
-                                      </div>
-                                      <h3 className="text-xl font-black text-white leading-tight mb-1">
-                                          {discountStatus === 'WAITING'
-                                              ? "Big Discount Event"
-                                              : `${settings?.specialDiscountEvent?.discountPercent || 50}% OFF SALE`}
-                                      </h3>
-                                      <p className="text-xs text-white/80 font-medium max-w-[200px]">
-                                          {discountStatus === 'WAITING'
-                                              ? "Get ready for the biggest sale!"
-                                              : "Limited time offer on all premium plans."}
-                                      </p>
-                                  </div>
-
-                                  <div className="text-right bg-black/20 p-3 rounded-2xl backdrop-blur-sm border border-white/10 shrink-0">
-                                      <p className="text-[9px] font-bold text-white/60 uppercase mb-1 text-center">
-                                          {discountStatus === 'WAITING' ? 'Starts In' : 'Ends In'}
-                                      </p>
-                                      <div className="font-mono text-lg font-black text-white tracking-widest text-center tabular-nums">
-                                          {discountTimer || "00:00:00"}
-                                      </div>
-                                  </div>
-                              </div>
-
-                              {/* CTA Button (Only if Active) */}
-                              {discountStatus === 'ACTIVE' && (
-                                  <button
-                                      onClick={() => onTabChange('STORE')}
-                                      className="w-full bg-white text-red-600 text-sm font-black py-3 px-4 rounded-xl shadow-lg hover:bg-red-50 active:scale-95 transition-all flex items-center justify-center gap-2"
-                                  >
-                                      <ShoppingBag size={18} /> CLAIM OFFER NOW
-                                  </button>
-                              )}
-                          </div>
-                      </div>
-                  )}
-              </div>
-          );
-      }
-
-      // 3. COURSES TAB (Handles Video, Notes, MCQ Selection)
-      if (activeTab === 'COURSES') {
-          // If viewing a specific content type (from drilled down), show it
-          // Note: Clicking a subject switches tab to VIDEO/PDF/MCQ, so COURSES just shows the Hub.
-          const visibleSubjects = getSubjectsList(user.classLevel || '10', user.stream || null)
-                                    .filter(s => !(settings?.hiddenSubjects || []).includes(s.id));
-
-          return (
-              <div className="space-y-6 pb-24">
-                      <div className="flex items-center justify-between">
-                          <h2 className="text-2xl font-black text-slate-800">My Courses</h2>
-                      </div>
-
-                      {/* Video Section */}
-                      {settings?.contentVisibility?.VIDEO !== false && (
-                          <div className="bg-gradient-to-br from-red-50 to-rose-100 p-6 rounded-3xl border border-red-200 shadow-sm">
-                              <h3 className="font-black text-red-900 flex items-center gap-2 mb-4 text-lg">
-                                  <div className="p-2 bg-white rounded-full shadow-sm text-red-600"><Youtube size={20} /></div>
-                                  Video Lectures
-                              </h3>
-                              <div className="grid grid-cols-2 gap-3">
-                                  {visibleSubjects.map(s => (
-                                      <button key={s.id} onClick={() => { onTabChange('VIDEO'); handleContentSubjectSelect(s); }} className="bg-white p-3 rounded-2xl text-xs font-bold text-slate-700 shadow-sm border border-red-100 text-left hover:shadow-md hover:scale-[1.02] transition-all flex items-center gap-2">
-                                          <div className={`w-2 h-2 rounded-full ${s.color?.split(' ')[0] || 'bg-red-500'}`}></div>
-                                          {s.name}
-                                      </button>
-                                  ))}
-                              </div>
-                          </div>
-                      )}
-
-                      {/* Notes Section */}
-                      {settings?.contentVisibility?.PDF !== false && (
-                          <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-3xl border border-blue-200 shadow-sm">
-                              <h3 className="font-black text-blue-900 flex items-center gap-2 mb-4 text-lg">
-                                  <div className="p-2 bg-white rounded-full shadow-sm text-blue-600"><FileText size={20} /></div>
-                                  Notes Library
-                              </h3>
-                              <div className="grid grid-cols-2 gap-3">
-                                  {visibleSubjects.map(s => (
-                                      <button key={s.id} onClick={() => { onTabChange('PDF'); handleContentSubjectSelect(s); }} className="bg-white p-3 rounded-2xl text-xs font-bold text-slate-700 shadow-sm border border-blue-100 text-left hover:shadow-md hover:scale-[1.02] transition-all flex items-center gap-2">
-                                          <div className={`w-2 h-2 rounded-full ${s.color?.split(' ')[0] || 'bg-blue-500'}`}></div>
-                                          {s.name}
-                                      </button>
-                                  ))}
-                              </div>
-                          </div>
-                      )}
-
-                      {/* MCQ Section */}
-                      {settings?.contentVisibility?.MCQ !== false && (
-                          <div className="bg-gradient-to-br from-purple-50 to-fuchsia-100 p-6 rounded-3xl border border-purple-200 shadow-sm">
-                              <div className="flex justify-between items-center mb-4">
-                                  <h3 className="font-black text-purple-900 flex items-center gap-2 text-lg">
-                                      <div className="p-2 bg-white rounded-full shadow-sm text-purple-600"><CheckSquare size={20} /></div>
-                                      MCQ Practice
-                                  </h3>
-                              </div>
-                              <div className="grid grid-cols-2 gap-3">
-                                  {visibleSubjects.map(s => (
-                                      <button key={s.id} onClick={() => { onTabChange('MCQ'); handleContentSubjectSelect(s); }} className="bg-white p-3 rounded-2xl text-xs font-bold text-slate-700 shadow-sm border border-purple-100 text-left hover:shadow-md hover:scale-[1.02] transition-all flex items-center gap-2">
-                                          <div className={`w-2 h-2 rounded-full ${s.color?.split(' ')[0] || 'bg-purple-500'}`}></div>
-                                          {s.name}
-                                      </button>
-                                  ))}
-                              </div>
-                          </div>
-                      )}
-
-                      {/* Audio/Podcast Section */}
-                      {settings?.contentVisibility?.AUDIO !== false && (
-                          <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-4 rounded-2xl shadow-lg border border-slate-700 relative overflow-hidden">
-                              <div className="flex justify-between items-center mb-2 relative z-10">
-                                  <h3 className="font-bold text-white flex items-center gap-2"><Headphones className="text-pink-500" /> Audio Library</h3>
-                                  <span className="text-[10px] font-black bg-pink-600 text-white px-2 py-0.5 rounded-full">NEW</span>
-                              </div>
-                              <p className="text-xs text-slate-400 mb-3 relative z-10">Listen to high-quality audio lectures and podcasts.</p>
-                              <div className="grid grid-cols-2 gap-2 relative z-10">
-                                  {visibleSubjects.map(s => (
-                                      <button key={s.id} onClick={() => { onTabChange('AUDIO'); handleContentSubjectSelect(s); }} className="bg-white/10 hover:bg-white/20 p-2 rounded-xl text-xs font-bold text-white shadow-sm border border-white/10 text-left backdrop-blur-sm transition-colors">
-                                          {s.name}
-                                      </button>
-                                  ))}
-                              </div>
-                          </div>
-                      )}
-                  </div>
-              );
       }
 
       // 4. LEGACY TABS (Mapped to new structure or kept as sub-views)
       if (activeTab === 'CUSTOM_PAGE') return <CustomBloggerPage onBack={() => onTabChange('HOME')} />;
       if (activeTab === 'DEEP_ANALYSIS') return <AiDeepAnalysis user={user} settings={settings} onUpdateUser={handleUserUpdate} onBack={() => onTabChange('HOME')} />;
       if (activeTab === 'AI_HISTORY') return <AiHistoryPage user={user} onBack={() => onTabChange('HOME')} />;
-      if (activeTab === 'UPDATES') return <UniversalInfoPage onBack={() => onTabChange('HOME')} />;
+      if (activeTab === 'UPDATES') return <UniversalInfoPage mode="UPDATES" onBack={() => onTabChange('HOME')} />;
+      if (activeTab === 'UNIVERSAL_VIDEOS') return <UniversalInfoPage mode="VIDEOS" onBack={() => onTabChange('HOME')} />;
       if ((activeTab as string) === 'ANALYTICS') return <AnalyticsPage user={user} onBack={() => onTabChange('HOME')} settings={settings} onNavigateToChapter={onNavigateToChapter} />;
       if ((activeTab as string) === 'SUB_HISTORY') return <SubscriptionHistory user={user} onBack={() => onTabChange('HOME')} />;
       if (activeTab === 'HISTORY') return <HistoryPage user={user} onUpdateUser={handleUserUpdate} settings={settings} />;
@@ -1922,310 +1536,83 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
             </div>
         )}
 
-        {/* MAIN CONTENT AREA */}
-        <div className="p-4">
-            {renderMainContent()}
-            
-            {settings?.showFooter !== false && (
-                <div className="mt-8 mb-4 text-center">
-                    <p 
-                        className="text-[10px] font-black uppercase tracking-widest"
-                        style={{ color: settings?.footerColor || '#cbd5e1' }}
-                    >
-                        Developed by Nadim Anwar
-                    </p>
-                </div>
-            )}
-        </div>
-
-        {/* MINI PLAYER */}
-        <MiniPlayer track={currentAudioTrack} onClose={() => setCurrentAudioTrack(null)} />
-
-        {/* FIXED BOTTOM NAVIGATION */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-50 pb-safe">
-            <div className="flex justify-around items-center h-16">
-                <button onClick={() => { onTabChange('HOME'); setContentViewStep('SUBJECTS'); }} className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'HOME' ? 'text-blue-600' : 'text-slate-400'}`}>
-                    <Home size={24} fill={activeTab === 'HOME' ? "currentColor" : "none"} />
-                    <span className="text-[10px] font-bold mt-1">Home</span>
-                </button>
-                
-                <button onClick={() => onTabChange('AI_STUDIO')} className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'AI_STUDIO' ? 'text-blue-600' : 'text-slate-400'}`}>
-                    <Sparkles size={24} fill={activeTab === 'AI_STUDIO' ? "currentColor" : "none"} />
-                    <span className="text-[10px] font-bold mt-1">AI Studio</span>
-                </button>
-
-                <button onClick={() => onTabChange('HISTORY')} className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'HISTORY' ? 'text-blue-600' : 'text-slate-400'}`}>
-                    <History size={24} className={activeTab === 'HISTORY' ? "text-blue-600" : ""} />
-                    <span className="text-[10px] font-bold mt-1">History</span>
-                </button>
-
-                <button onClick={() => onTabChange('PROFILE')} className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'PROFILE' ? 'text-blue-600' : 'text-slate-400'}`}>
-                    <UserIconOutline size={24} fill={activeTab === 'PROFILE' ? "currentColor" : "none"} />
-                    <span className="text-[10px] font-bold mt-1">Profile</span>
-                </button>
-            </div>
-        </div>
-
-        <StudentSidebar
-            isOpen={isSidebarOpen}
-            onClose={() => setIsSidebarOpen(false)}
-            onNavigate={(tab) => {
-                onTabChange(tab);
-                setIsSidebarOpen(false);
-            }}
-            user={user}
-            settings={settings}
-            onLogout={() => {
-                localStorage.removeItem('nst_current_user');
-                window.location.reload();
-            }}
-        />
-
-        {/* SYLLABUS SELECTION POPUP */}
-        {showSyllabusPopup && (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
-                <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl scale-in-center">
-                    <div className="text-center mb-6">
-                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
-                            <BookOpen size={32} />
-                        </div>
-                        <h3 className="text-xl font-black text-slate-800">Choose Syllabus Mode</h3>
-                        <p className="text-sm text-slate-500 mt-1">Select how you want to study this chapter.</p>
-                    </div>
-                    
-                    <div className="space-y-3 mb-6">
-                        <button 
-                            onClick={() => confirmSyllabusSelection('SCHOOL')}
-                            className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-blue-200 active:scale-95 transition-all flex items-center justify-center gap-3"
-                        >
-                            🏫 School Mode
-                        </button>
-                        <button 
-                            onClick={() => confirmSyllabusSelection('COMPETITION')}
-                            className="w-full bg-purple-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-purple-200 active:scale-95 transition-all flex items-center justify-center gap-3"
-                        >
-                            🏆 Competition Mode
-                        </button>
-                    </div>
-
-                    <button 
-                        onClick={() => setShowSyllabusPopup(null)}
-                        className="w-full py-3 text-slate-400 font-bold hover:text-slate-600 transition-colors"
-                    >
-                        Cancel
-                    </button>
-                </div>
-            </div>
-        )}
-
-        {/* MODALS */}
-        {showLogoutTimer && (
-            <div className="fixed inset-0 z-[200] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
-                <div className="bg-white rounded-3xl p-8 w-full max-w-sm text-center shadow-2xl relative overflow-hidden">
-                    <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 text-red-600 animate-pulse">
-                        <KeyRound size={32} />
-                    </div>
-                    <h2 className="text-2xl font-black text-slate-800 mb-2">Password Check!</h2>
-                    <p className="text-slate-600 font-medium mb-6">
-                        {settings?.logoutMessage || "Aap ko yaad hai password? Agar yaad nahi hai to password change kijiye warna login nahi kar payenge."}
-                    </p>
-
-                    {logoutTimer > 0 && (
-                        <div className="text-4xl font-black text-slate-900 mb-6 font-mono">
-                            00:{String(logoutTimer).padStart(2, '0')}
-                        </div>
-                    )}
-
-                    <div className="space-y-3">
-                        <button
-                            onClick={() => { setShowLogoutTimer(false); setEditMode(true); }}
-                            className="w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors"
-                        >
-                            Change Password
-                        </button>
-                        <button
-                            onClick={() => {
-                                if (logoutTimer === 0) {
-                                    localStorage.removeItem('nst_current_user');
-                                    window.location.reload();
-                                }
-                            }}
-                            disabled={logoutTimer > 0}
-                            className={`w-full py-4 rounded-xl font-black text-white shadow-lg transition-all ${
-                                logoutTimer > 0
-                                ? 'bg-slate-300 cursor-not-allowed'
-                                : 'bg-red-600 hover:bg-red-700 active:scale-95'
-                            }`}
-                        >
-                            {logoutTimer > 0 ? `Wait ${logoutTimer}s` : 'Yes, I Remember (Logout)'}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )}
-
-        {showUserGuide && <UserGuide onClose={() => setShowUserGuide(false)} />}
-        
-        {editMode && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
-                <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
-                    {/* ... (Edit Profile Content - duplicated code removed for brevity, should use component) ... */}
-                    {/* Re-implementing simplified edit mode here as it was inside a helper function before */}
-                    <h3 className="font-bold text-lg mb-4">Edit Profile & Settings</h3>
-                    <div className="space-y-3 mb-6">
-                        <div><label className="text-xs font-bold text-slate-500 uppercase">Daily Study Goal (Hours)</label><input type="number" value={profileData.dailyGoalHours} onChange={e => setProfileData({...profileData, dailyGoalHours: Number(e.target.value)})} className="w-full p-2 border rounded-lg" min={1} max={12}/></div>
-                        <div className="h-px bg-slate-100 my-2"></div>
-                        <div><label className="text-xs font-bold text-slate-500 uppercase">New Password</label><input type="text" placeholder="Set new password (optional)" value={profileData.newPassword} onChange={e => setProfileData({...profileData, newPassword: e.target.value})} className="w-full p-2 border rounded-lg bg-yellow-50 border-yellow-200"/><p className="text-[9px] text-slate-400 mt-1">Leave blank to keep current password.</p></div>
-                        <div className="h-px bg-slate-100 my-2"></div>
-                        <div><label className="text-xs font-bold text-slate-500 uppercase">Board</label><select value={profileData.board} onChange={e => setProfileData({...profileData, board: e.target.value as any})} className="w-full p-2 border rounded-lg"><option value="CBSE">CBSE</option><option value="BSEB">BSEB</option></select></div>
-                        <div><label className="text-xs font-bold text-slate-500 uppercase">Class</label><select value={profileData.classLevel} onChange={e => setProfileData({...profileData, classLevel: e.target.value as any})} className="w-full p-2 border rounded-lg">{['6','7','8','9','10','11','12'].map(c => <option key={c} value={c}>{c}</option>)}</select></div>
-                        {['11','12'].includes(profileData.classLevel) && (<div><label className="text-xs font-bold text-slate-500 uppercase">Stream</label><select value={profileData.stream} onChange={e => setProfileData({...profileData, stream: e.target.value as any})} className="w-full p-2 border rounded-lg"><option value="Science">Science</option><option value="Commerce">Commerce</option><option value="Arts">Arts</option></select></div>)}
-                        
-                        {/* NAME CHANGE */}
-                        <div className="h-px bg-slate-100 my-2"></div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase">Display Name ({settings?.nameChangeCost || 10} Coins)</label>
-                            <input 
-                                type="text" 
-                                value={user.name} 
-                                onChange={(e) => {
-                                    // Normally name is in user object, here we modify a local state if we want preview, 
-                                    // but saveProfile uses profileData. Let's add name to profileData.
-                                    // BUT user prop is read-only here. We need to handle this in saveProfile properly.
-                                    // For now, we will just prompt for Name Change separately or add it here.
-                                    // Adding separate logic for Name Change.
-                                    // Actually, let's keep it simple: separate button in profile view is better.
-                                }}
-                                disabled
-                                className="w-full p-2 border rounded-lg bg-slate-100 text-slate-500"
-                                placeholder="Change from Profile Page"
-                            />
-                            <p className="text-[9px] text-slate-400 mt-1">Use 'Edit Name' on Profile page to change.</p>
-                        </div>
-                    </div>
-                    <div className="flex gap-2"><button onClick={() => setEditMode(false)} className="flex-1 py-2 text-slate-500 font-bold">Cancel</button><button onClick={saveProfile} className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold">Save Changes</button></div>
-                </div>
-            </div>
-        )}
-        
-        {showInbox && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
-                <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
-                    <div className="bg-slate-50 p-4 border-b border-slate-100 flex justify-between items-center">
-                        <h3 className="font-bold text-slate-800 flex items-center gap-2"><Mail size={18} className="text-blue-600" /> Admin Messages</h3>
-                        <button onClick={() => setShowInbox(false)} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
-                    </div>
-                    <div className="max-h-80 overflow-y-auto p-4 space-y-3">
-                        {(!user.inbox || user.inbox.length === 0) && <p className="text-slate-400 text-sm text-center py-8">No messages.</p>}
-                        {user.inbox?.map(msg => (
-                            <div key={msg.id} className={`p-3 rounded-xl border text-sm ${msg.read ? 'bg-white border-slate-100' : 'bg-blue-50 border-blue-100'} transition-all`}>
-                                <div className="flex justify-between items-start mb-2">
-                                    <div className="flex items-center gap-2">
-                                        <p className="font-bold text-slate-500">{msg.type === 'GIFT' ? '🎁 GIFT' : 'MESSAGE'}</p>
-                                        {!msg.read && <span className="w-2 h-2 bg-blue-500 rounded-full"></span>}
-                                    </div>
-                                    <p className="text-slate-400 text-[10px]">{new Date(msg.date).toLocaleDateString()}</p>
-                                </div>
-                                <p className="text-slate-700 leading-relaxed mb-2">{msg.text}</p>
-                                
-                                {(msg.type === 'REWARD' || msg.type === 'GIFT') && !msg.isClaimed && (
-                                    <button 
-                                        onClick={() => claimRewardMessage(msg.id, msg.reward, msg.gift)}
-                                        className="w-full mt-2 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-lg shadow-md hover:scale-[1.02] transition-transform text-xs flex items-center justify-center gap-2"
-                                    >
-                                        <Gift size={14} /> Claim {msg.type === 'GIFT' ? 'Gift' : 'Reward'}
-                                    </button>
-                                )}
-                                {(msg.isClaimed) && <p className="text-[10px] text-green-600 font-bold bg-green-50 inline-block px-2 py-1 rounded">✅ Claimed</p>}
+        {/* GOAL POPUP */}
+        {showGoalPopup && user.dailyRoadmap && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in">
+                <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl scale-in-center overflow-hidden flex flex-col max-h-[80vh]">
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-2">
+                            <Compass className="text-violet-600" size={24} />
+                            <div>
+                                <h3 className="text-lg font-black text-slate-800">Today's Goal</h3>
+                                <p className="text-xs text-slate-500">{new Date(user.dailyRoadmap.date).toLocaleDateString()}</p>
                             </div>
-                        ))}
+                        </div>
+                        <button onClick={() => setShowGoalPopup(false)} className="p-2 hover:bg-slate-100 rounded-full">
+                            <X size={20} className="text-slate-400" />
+                        </button>
                     </div>
-                    {unreadCount > 0 && <button onClick={markInboxRead} className="w-full py-3 bg-blue-600 text-white font-bold text-sm hover:opacity-90">Mark All as Read</button>}
-                </div>
-            </div>
-        )}
 
-        {/* SUPPORT MODAL (Replacing ChatHub) */}
-        {showSupportModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
-                <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl text-center">
-                    <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Headphones size={32} className="text-blue-600" />
+                    <div className="overflow-y-auto flex-1 space-y-4 pr-1">
+                        {user.dailyRoadmap.aiMessage && (
+                            <div className="bg-violet-50 p-4 rounded-2xl border border-violet-100 flex gap-3">
+                                <Bot size={20} className="text-violet-600 shrink-0 mt-1" />
+                                <p className="text-xs text-violet-800 italic leading-relaxed">"{user.dailyRoadmap.aiMessage}"</p>
+                            </div>
+                        )}
+
+                        <div className="space-y-2">
+                            {user.dailyRoadmap.tasks.map((task, idx) => (
+                                <div key={task.id} className="bg-slate-50 p-3 rounded-xl border border-slate-100 flex flex-col gap-2">
+                                    <div className="flex justify-between items-start gap-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className={`p-1.5 rounded-lg text-white ${task.type === 'MCQ' ? 'bg-pink-500' : 'bg-blue-500'}`}>
+                                                {task.type === 'MCQ' ? <CheckSquare size={14} /> : <BookOpen size={14} />}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-xs text-slate-700 line-clamp-1">{task.title}</p>
+                                                <p className="text-[10px] text-slate-400">{task.subject}</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => handleDeleteTask(task.id, task.title)}
+                                            className="text-slate-300 hover:text-red-500 p-1"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <div className="flex-1 bg-white px-2 py-1 rounded border border-slate-100 text-[9px] text-slate-500">
+                                            {task.reason}
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                setShowGoalPopup(false);
+                                                onTabChange(task.type === 'MCQ' ? 'MCQ' : 'PDF');
+                                            }}
+                                            className="px-4 py-1 bg-slate-800 text-white text-[10px] font-bold rounded-lg hover:bg-black"
+                                        >
+                                            Start
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                            {user.dailyRoadmap.tasks.length === 0 && (
+                                <div className="text-center py-8 text-slate-400">
+                                    <CheckCircle size={48} className="mx-auto mb-2 text-green-400" />
+                                    <p className="font-bold">All tasks completed!</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                    <h3 className="text-xl font-black text-slate-800 mb-2">Need Help?</h3>
-                    <p className="text-sm text-slate-500 mb-6">
-                        Contact Admin directly for support, subscription issues, or questions.
-                    </p>
                     
-                    <button 
-                        onClick={handleSupportEmail}
-                        className="w-full bg-green-500 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-green-600 transition-all flex items-center justify-center gap-2 mb-3"
-                    >
-                        <Mail size={20} /> Email Support
-                    </button>
-                    
-                    <button 
-                        onClick={() => setShowSupportModal(false)} 
-                        className="w-full py-3 text-slate-500 font-bold hover:bg-slate-50 rounded-xl"
-                    >
-                        Close
-                    </button>
-                </div>
-            </div>
-        )}
-
-        {isLoadingContent && <LoadingOverlay dataReady={isDataReady} onComplete={onLoadingComplete} />}
-        {activeExternalApp && <div className="fixed inset-0 z-50 bg-white flex flex-col"><div className="flex items-center justify-between p-4 border-b bg-slate-50"><button onClick={() => setActiveExternalApp(null)} className="p-2 bg-white rounded-full border shadow-sm"><X size={20} /></button><p className="font-bold text-slate-700">External App</p><div className="w-10"></div></div><iframe src={activeExternalApp} className="flex-1 w-full border-none" title="External App" allow="camera; microphone; geolocation; payment" /></div>}
-        {pendingApp && <CreditConfirmationModal title={`Access ${pendingApp.app.name}`} cost={pendingApp.cost} userCredits={user.credits} isAutoEnabledInitial={!!user.isAutoDeductEnabled} onCancel={() => setPendingApp(null)} onConfirm={(auto) => processAppAccess(pendingApp.app, pendingApp.cost, auto)} />}
-        
-        {/* GLOBAL ALERT MODAL */}
-        <CustomAlert 
-            isOpen={alertConfig.isOpen}
-            type={alertConfig.type}
-            title={alertConfig.title}
-            message={alertConfig.message}
-            onClose={() => setAlertConfig(prev => ({...prev, isOpen: false}))}
-        />
-
-        {/* GUEST BANNER */}
-        {user.isGuest && (
-            <div className="fixed bottom-20 left-4 right-4 bg-orange-500 text-white p-4 rounded-2xl shadow-xl z-50 flex items-center justify-between animate-bounce-slow">
-                <div className="flex items-center gap-3">
-                    <AlertCircle size={24} className="text-white shrink-0" />
-                    <div>
-                        <p className="font-bold text-sm">Guest Mode Active</p>
-                        <p className="text-xs text-white/90">{settings?.guestWarningMessage || "Apne account ko mobile/email se register kijiye warna ye account kho sakta hai."}</p>
+                    <div className="mt-4 pt-4 border-t border-slate-100">
+                        <p className="text-center text-[10px] text-slate-400 italic">"{user.dailyRoadmap.motivation}"</p>
                     </div>
                 </div>
-                <button
-                    onClick={() => {
-                        localStorage.removeItem('nst_current_user');
-                        window.location.reload();
-                    }}
-                    className="bg-white text-orange-600 px-4 py-2 rounded-xl font-bold text-xs shadow-sm hover:bg-orange-50 whitespace-nowrap"
-                >
-                    Register Now
-                </button>
             </div>
         )}
 
-        {showChat && <UniversalChat user={user} onClose={() => setShowChat(false)} />}
-
-        {/* AI INTERSTITIAL */}
-        {/* ... (existing ai interstitial code if any) ... */}
-
-        {/* EXPIRY POPUP */}
-        <ExpiryPopup 
-            isOpen={showExpiryPopup}
-            onClose={() => setShowExpiryPopup(false)}
-            expiryDate={user.subscriptionEndDate || new Date().toISOString()}
-            onRenew={() => {
-                setShowExpiryPopup(false);
-                onTabChange('STORE');
-            }}
-        />
-
-        {showMonthlyReport && <MonthlyMarksheet user={user} settings={settings} onClose={() => setShowMonthlyReport(false)} reportType={marksheetType} />}
         {showReferralPopup && <ReferralPopup user={user} onClose={() => setShowReferralPopup(false)} onUpdateUser={handleUserUpdate} />}
 
         {/* SIDEBAR OVERLAY */}
@@ -2289,21 +1676,32 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
                             Request Content
                         </button>
 
-                        {/* UNIVERSAL VIDEO BUTTON (Admin Configured) */}
-                        {settings?.universalVideoConfig?.enabled && (
-                            <button
-                                onClick={() => {
-                                    if (settings.universalVideoConfig?.url) {
-                                        setActiveExternalApp(settings.universalVideoConfig.url);
-                                        setShowSidebar(false);
-                                    }
-                                }}
-                                className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700"
-                            >
-                                <div className="bg-rose-100 text-rose-600 p-2 rounded-lg"><Youtube size={20} /></div>
-                                {settings.universalVideoConfig.buttonLabel || "Watch Video"}
+                        {/* TODAY'S GOAL (Sidebar Item) */}
+                        {settings?.isAiRoadmapEnabled && user.dailyRoadmap && (
+                            <button onClick={() => { setShowGoalPopup(true); setShowSidebar(false); }} className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700">
+                                <div className="bg-violet-100 text-violet-600 p-2 rounded-lg"><Compass size={20} /></div>
+                                Today's Goal
                             </button>
                         )}
+
+                        {/* UNIVERSAL VIDEO BUTTON (Admin Configured) */}
+                        {/* Note: User requested to move it to sidebar. It was already here, but updated to use new tab logic if needed or keep existing external app logic.
+                            The user said "universal videos play karna ka button waha tap karne pe universal videos jitna ho sab ka list aajayega".
+                            So we should switch to the 'UNIVERSAL_VIDEOS' tab or show the list.
+                            The previous home page button used `onTabChange('UNIVERSAL_VIDEOS')`.
+                            The existing sidebar button used `setActiveExternalApp` (direct URL).
+                            We should update this sidebar button to match the new list behavior.
+                        */}
+                        <button
+                            onClick={() => {
+                                onTabChange('UNIVERSAL_VIDEOS');
+                                setShowSidebar(false);
+                            }}
+                            className="w-full p-4 rounded-xl flex items-center gap-4 hover:bg-slate-50 transition-colors font-bold text-slate-700"
+                        >
+                            <div className="bg-rose-100 text-rose-600 p-2 rounded-lg"><Youtube size={20} /></div>
+                            {settings?.universalVideoConfig?.buttonLabel || "Universal Videos"}
+                        </button>
 
                         {/* EXTERNAL APPS (Admin Configured) */}
                         {settings?.externalApps?.map(app => (

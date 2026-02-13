@@ -2026,7 +2026,7 @@ const App: React.FC = () => {
             onTabSelect={setStudentTab} 
             onGoHome={goHome} 
             onGoBack={goBack} 
-            isStudent={state.user.role === 'STUDENT' || !!state.originalAdmin} 
+          isStudent={state.user.role === 'STUDENT' || state.user.role === 'ADMIN' || !!state.originalAdmin}
             settings={state.settings}
           />
       )}

@@ -1351,6 +1351,8 @@ export const StudentDashboard: React.FC<Props> = ({ user, dailyStudySeconds, onS
             </div>
         )}
 
+        {renderMainContent()}
+
         {/* AI NOTES MODAL */}
         {showAiModal && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in">
